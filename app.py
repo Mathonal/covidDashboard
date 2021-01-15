@@ -51,7 +51,7 @@ def appcontent(app):
 
     # Start the app
     #app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
-    server = app.server
+    #server = app.server
 
     # compute few data
     lastline = df.shape[0]-1
@@ -309,6 +309,7 @@ def appcontent(app):
 
 
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
+server = app.server
 appcontent(app)
 
 if __name__ == "__main__":
