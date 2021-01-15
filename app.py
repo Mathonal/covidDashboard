@@ -308,6 +308,7 @@ def appcontent(app):
     #     return {i: '{}'.format(df['Date'][i]) for i in range(0,df.shape[0]-1,(df.shape[0]-1)//5)}
 
 
+update_alldata() #refresh all data at launch
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 server = app.server
 appcontent(app)

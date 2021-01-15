@@ -31,7 +31,7 @@ country_map = {
     "Italy":"Italie",
     "Netherlands":"Pays-bas",
     "United Kingdom":"Royaume-unis",
-    "Russia":"Russie",
+    "Russian Federation":"Russie",
     "Sweden":"Suède",
     "Switzerland":"Suisse",
 }
