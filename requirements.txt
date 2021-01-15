@@ -1,0 +1,11 @@
+#flask
+#flask_sqlalchemy
+#pysqlite3
+gunicorn==19.9.0
+dash #==1.17.0
+dash-pivottable
+dash_daq
+dash_bootstrap_components
+pandas
+numpy
+requests
