@@ -308,9 +308,8 @@ def appcontent(app):
     #     return {i: '{}'.format(df['Date'][i]) for i in range(0,df.shape[0]-1,(df.shape[0]-1)//5)}
 
 
-if __name__ == "__main__":
-    app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
-    
-    appcontent(app)
+app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
+appcontent(app)
 
+if __name__ == "__main__":
     app.run_server(debug=True,host='0.0.0.0')
