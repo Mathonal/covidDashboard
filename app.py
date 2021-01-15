@@ -17,10 +17,10 @@ from modeling import col_map,country_map
 #from modeling import lrr, df, fb, col_map
 #from modeling import dfTrain, dfTrainStd, dfTest, dfTestStd, yTrain, yTest
 #countrylist = ['France','Belgium','Germany']
-
-
+update_alldata() #refresh all data at launch
 
 def appcontent(app):
+
 
     def Header(name, app):
         title = html.H2(name, style={"margin-top": 5})
@@ -308,7 +308,7 @@ def appcontent(app):
     #     return {i: '{}'.format(df['Date'][i]) for i in range(0,df.shape[0]-1,(df.shape[0]-1)//5)}
 
 
-update_alldata() #refresh all data at launch
+
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 server = app.server
 appcontent(app)

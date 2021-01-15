@@ -161,5 +161,5 @@ def updateIncidenceTable(paysname,testmode=False):
         
         currentdf.to_csv(filepath,index=False)       
         
-    else : print('no recent data detected, incidence update cancelled')
+    else : print('no recent data detected for {}, incidence update cancelled'.format(paysname))
 

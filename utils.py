@@ -1,13 +1,17 @@
 import pandas as pd
 import numpy as np
+import time
 
 from api_pipeline.api_utils import updateIncidenceTable,getRawDataToCSV,loadCSVData
 from modeling import country_map
 
 def update_alldata():
+    print('beginning update')
     for country in country_map.keys():
         getRawDataToCSV(country)
         updateIncidenceTable(country)
+        time.sleep(1)
+    print('update terminated')
 
 def verify_priordata(paysname):
     try:
