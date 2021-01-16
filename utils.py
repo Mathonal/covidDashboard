@@ -1,24 +1,50 @@
 import pandas as pd
 import numpy as np
-import time
+import datetime
+import threading
 
 from api_pipeline.api_utils import updateIncidenceTable,getRawDataToCSV,loadCSVData
 from modeling import country_map
 
+def globaldataupdate(testmode=False):
+    print('Entering global update verification')
+    #datetime verification
+    today_object = datetime.date.today()
+    try:
+        lastdfdate = list(open('lastupdate.txt', 'r'))[0]
+        lastdfdate = datetime.datetime.strptime(lastdfdate, '%Y-%m-%d').date()
+    except:
+        lastdfdate = 0
+
+    if testmode : lastdfdate = 0
+    #limited to one global update daily
+    if today_object != lastdfdate :
+        print('Executing global data update')
+        lastdfdate = open('lastupdate.txt', 'w').write(
+                today_object.strftime("%Y-%m-%d"))
+        threading.Thread(target=update_alldata).start()
+
 def update_alldata():
-    print('beginning update')
-    for country in country_map.keys():
-        getRawDataToCSV(country)
-        updateIncidenceTable(country)
-        time.sleep(1)
-    print('update terminated')
+    print('beginning global update thread')
+    threadslist = []
+    for countryname in country_map.keys():
+        getRawDataToCSV(countryname)
+        updateIncidenceTable(countryname)
+    print('global update terminated')
 
 def verify_priordata(paysname):
+    """
+        Function supposed to certify that 
+        the incidence file exists for input country
+        (function called during callbacks or app init)
+    """
+    # force call to api if Raw data not found
     try:
         rawdf = loadCSVData(paysname,'Raw')
     except FileNotFoundError:
         getRawDataToCSV(paysname)
 
+    # read or create incidence file from raw file
     try:
         incdf = loadCSVData(paysname,'Inc')
     except FileNotFoundError:
