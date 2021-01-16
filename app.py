@@ -16,6 +16,8 @@ from api_pipeline.api_utils import updateIncidenceTable
 from utils import update_alldata,verify_priordata,globaldataupdate
 from modeling import col_map,country_map
 
+#default loading country (first in list)
+DEFAULTCOUNTRY = list(country_map.keys())[0]
 # verify data for country list before lauching or restarting app 
 # (after sleep on keroku)
 globaldataupdate()
@@ -35,64 +37,21 @@ def appcontent(app):
     def LabeledSelect(label, **kwargs):
         return dbc.FormGroup([dbc.Label(label), dbc.Select(**kwargs)])
 
-
-    # Compute the explanation dataframe, GAM, and scores
-
-    #df = pd.read_csv("workdata/incidence_France_Table.csv")
-    df = verify_priordata('France')
-
-    # compute few data
-    lastline = df.shape[0]-1
-    mortalityrate = df['Deaths'][lastline]/df['Confirmed'][lastline]
-
-    dfpop = pd.read_csv("workdata/population_2019.csv",index_col=0)
-    print(dfpop['population']['France'])
-    contaminationrate = df['Confirmed'][lastline]/(float(dfpop['population']['France'])*1000000)
-
-    # Card components
-    cards = [
-        dbc.Card(
-        [
-            html.H2(f"{contaminationrate*100:.2f}%", className="card-title",id='infected-rate'),
-            html.P("population infected", className="card-text"),
-        ],
-        body=True,
-        color="dark",
-        inverse=True,
-        ),
-        dbc.Card(
-            [
-                html.H2(f"{mortalityrate*100:.2f}%", className="card-title",id='mortality-rate'),
-                html.P("Mortality Rate (of infected)", className="card-text"),
-            ],
-            body=True,
-            color="light",
-        ),
-
-        ]
-    #     dbc.Card(
-    #         [
-    #             html.H2(f"{dfTrain.shape[0]} / {dfTest.shape[0]}", className="card-title"),
-    #             html.P("Train / Test Split", className="card-text"),
-    #         ],
-    #         body=True,
-    #         color="primary",
-    #         inverse=True,
-    #     ),
-    # ]
+    # Loading default Dataframe and compute data
+    df = verify_priordata(DEFAULTCOUNTRY)
+   
+    # ================== LAYOUT=========================
 
     labelselectors = [
             LabeledSelect(
                 id="select-country",
                 options=[{"label": v, "value": k} for k,v in country_map.items()],
-                #value=list(xPlot.keys())[0],
                 value=list(country_map.keys())[0],
                 label="Filter by Country",
             ),
             LabeledSelect(
                 id="select-type",
                 options=[{"label": v, "value": k} for k, v in list(col_map.items())[0:4]],
-                #value=list(xPlot.keys())[0],
                 value='Confirmed',
                 label="Filter by data type",
             ), 
@@ -120,7 +79,11 @@ def appcontent(app):
     ) 
     ]
 
-
+    # Card components 
+    cards = [
+        dbc.Card(id='affected_card'),
+        dbc.Card(id='mortality_card')
+        ] 
     # Graph components
     graphs = [
         [
@@ -170,7 +133,7 @@ def appcontent(app):
         fluid=False,
     )
 
-
+    #GRAPHS
     @app.callback(
         [Output("graph-cumul", "figure"),
         Output("graph-incidence", "figure"),
@@ -257,6 +220,44 @@ def appcontent(app):
 
         return coef_fig,coef_fig2,slidemarksdict,slidemax
 
+    # CARDS
+    @app.callback(
+        [Output("affected_card", "children"),
+        Output("mortality_card", "children")],
+        Input("select-country", "value"),
+        )
+    def computeCardsComponents(country_val):
+        df = verify_priordata(country_val)
+        print('updating cards')
+        # compute few data
+        lastline = df.shape[0]-1
+        mortalityrate = df['Deaths'][lastline]/df['Confirmed'][lastline]
+        # population noted in millions
+        dfpop = pd.read_csv("workdata/population_2019.csv",index_col=0)
+        contaminationrate = df['Confirmed'][lastline]/(float(dfpop['population']['France'])*1000000)
+
+        # Card components    
+        cards = [
+        dbc.Card(
+        [
+            html.H2(f"{contaminationrate*100:.2f}%", className="card-title",id='infected-rate'),
+            html.P(f"population affected (+{df['Confirmed_brutincidence'][lastline]})", className="card-text"),
+        ],
+        body=True,
+        color="dark",
+        inverse=True,
+        ),
+        dbc.Card(
+            [
+                html.H2(f"{mortalityrate*100:.2f}%", className="card-title",id='mortality-rate'),
+                html.P(f"Mortality Rate of affected (+{df['Deaths_brutincidence'][lastline]})", className="card-text"),
+            ],
+            body=True,
+            color="light",
+        ),
+        ]
+        return cards[0],cards[1]
+
     # @app.callback(
     #     Output("placeholder", "children"),
     #     Input('update_button', 'n_clicks'),
@@ -267,27 +268,7 @@ def appcontent(app):
     #         print("updatingdata from click callback : nclik = {}".format(n_clicks))
     #         update_alldata()
     #     return ''
-
-    @app.callback(
-        [Output("infected-rate", "children"),
-        Output("mortality-rate", "children")],
-        Input("select-country", "value"),
-        #[dash.dependencies.State('input-box', 'value')]
-        )
-    def update_cards(country_val):
-        #filepath = "workdata/incidence_"+country_val+"_Table.csv"
-        #df = pd.read_csv(filepath)
-        df = verify_priordata(country_val)
-        # compute few data
-        print('update cards')
-
-        lastline = df.shape[0]-1
-        mortalityrate = df['Deaths'][lastline]/df['Confirmed'][lastline]
-
-        dfpop = pd.read_csv("workdata/population_2019.csv",index_col=0)
-        contaminationrate = df['Confirmed'][lastline]/(float(dfpop['population'][country_val])*1000000)
-
-        return f"{contaminationrate*100:.2f}%",f"{mortalityrate*100:.2f}%"
+    
     # @app.callback(
     #     Output('date-slider', 'marks'),
     #     Input("select-country", "value"))
