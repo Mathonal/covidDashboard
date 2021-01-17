@@ -57,17 +57,16 @@ def appcontent(app):
             ), 
         ]
 
-
-    otherselectors = [
-            dcc.RangeSlider(
+    daterangeselector = dcc.RangeSlider(
             id='date-slider',
             # label="Filter time range",
             # marks={i: '{}'.format(df['Date'][i]) for i in range(0,df.shape[0]-1,(df.shape[0]-1)//5)},
             min=0,
             max=df.shape[0]-1,
             value=[0, df.shape[0]-1]
-            ),
-            dcc.Checklist(
+            )
+
+    incidencetypeselector = dcc.Checklist(
             id='inc-type',
             options=[
             {'label': 'brut incidence   ', 'value': 'brut'},
@@ -76,58 +75,42 @@ def appcontent(app):
             ],
             value=['MA', 'EMA'],
             labelStyle={'display': 'inline-block'}
-    ) 
-    ]
+            )
 
-    # Card components 
+    # Card components
     cards = [
         dbc.Card(id='affected_card'),
-        dbc.Card(id='mortality_card')
+        dbc.Card(id='mortality_card'),
+        #dbc.Card(id='mortality_card2')
         ] 
     # Graph components
     graphs = [
         [
-            # LabeledSelect(
-            #     id="select-type",
-            #     options=[{"label": v, "value": k} for k, v in col_map.items()],
-            #     #value=list(xPlot.keys())[0],
-            #     value='Confirmed',
-            #     label="Filter type",
-            # ),
             dcc.Graph(id="graph-cumul"),
-            dcc.Graph(id="graph-incidence"),
         ],
-        # [
-        #     LabeledSelect(
-        #         id="select-type",
-        #         options=[{"label": v, "value": k} for k, v in col_map.items()],
-        #         value=list(xPlot.keys())[0],
-        #         label="Filter Features",
-        #     ),
-        #     dcc.Graph(id="graph-cumul"),
-        # ],
-        # [
-        #     LabeledSelect(
-        #         id="select-gam",
-        #         options=[{"label": col_map[k], "value": k} for k in xPlot.keys()],
-        #         value=list(xPlot.keys())[0],
-        #         label="Visualize GAM",
-        #     ),
-        #     dcc.Graph("graph-gam"),
-        # ],
+        [
+            incidencetypeselector,
+            dcc.Graph(id="graph-incidence"),
+            
+        ],
     ]
 
+    # LAYOUT STACKING
     app.layout = dbc.Container(
         [
             Header("Dash Covid Visualization", app),
             html.Hr(), # Separation line
-            dbc.Row([dbc.Col(card) for card in cards]),
+            dbc.Row([dbc.Col(card) for card in cards]), # 1 row with Xcard in column
             html.Br(),
-            #selectors[1],
+            #GLOBAL SELECTORS : 1 row with x label selectors, 1 row with date
             dbc.Row([dbc.Col(selector) for selector in labelselectors]),
-            dbc.Col([dbc.Col(selector) for selector in otherselectors]),
+            dbc.Col(dbc.Col(daterangeselector)),
 
-            dbc.Row([dbc.Col(graph) for graph in graphs]),
+            #dbc.Row([dbc.Col(graph) for graph in graphs]),
+            dbc.Row(dbc.Col(dbc.Card(graphs[0]))),
+            html.Br(),
+            dbc.Row(dbc.Col(dbc.Card(graphs[1]))),
+
             html.P(id='placeholder')
         ],
         fluid=False,
