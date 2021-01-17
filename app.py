@@ -7,29 +7,30 @@ from dash.dependencies import Input, Output, State
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objs as go
+
 #from sklearn.metrics import accuracy_score
 
 pd.options.mode.chained_assignment = None
 
 from api_pipeline.api_utils import updateIncidenceTable
-from utils import update_alldata,verify_priordata
+from utils import update_alldata,verify_priordata,globaldataupdate
 from modeling import col_map,country_map
-#from modeling import lrr, df, fb, col_map
-#from modeling import dfTrain, dfTrainStd, dfTest, dfTestStd, yTrain, yTest
-#countrylist = ['France','Belgium','Germany']
-update_alldata() #refresh all data at launch
+
+# verify data for country list before lauching or restarting app 
+# (after sleep on keroku)
+globaldataupdate()
 
 def appcontent(app):
-
 
     def Header(name, app):
         title = html.H2(name, style={"margin-top": 5})
         logo = html.Img(
             src=app.get_asset_url("dash-logo.png"), style={"float": "right", "height": 50}
         )
-        update_button = html.Button('Last Data', id='update_button',n_clicks=0)
-        return dbc.Row([dbc.Col(title, md=7), dbc.Col(update_button, md=2), dbc.Col(logo, md=3)])
+        #update_button = html.Button('Last Data', id='update_button',n_clicks=0)
+        #return dbc.Row([dbc.Col(title, md=7), dbc.Col(update_button, md=2), dbc.Col(logo, md=3)])
 
+        return dbc.Row([dbc.Col(title, md=9), dbc.Col(logo, md=3)])
 
     def LabeledSelect(label, **kwargs):
         return dbc.FormGroup([dbc.Label(label), dbc.Select(**kwargs)])
@@ -39,19 +40,6 @@ def appcontent(app):
 
     #df = pd.read_csv("workdata/incidence_France_Table.csv")
     df = verify_priordata('France')
-
-    #print(df.columns)
-    #xplot ={}
-    #for column in df.columns :
-    #    xplot[column] = df[column]
-    #xdf = lrr.explain().rename(columns={"rule/numerical feature": "rule"})
-    #xPlot, yPlot, plotLine = compute_plot_gam(lrr, df, fb, df.columns)
-    #train_acc = accuracy_score(yTrain, lrr.predict(dfTrain, dfTrainStd))
-    #test_acc = accuracy_score(yTest, lrr.predict(dfTest, dfTestStd))
-
-    # Start the app
-    #app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
-    #server = app.server
 
     # compute few data
     lastline = df.shape[0]-1
@@ -269,16 +257,16 @@ def appcontent(app):
 
         return coef_fig,coef_fig2,slidemarksdict,slidemax
 
-    @app.callback(
-        Output("placeholder", "children"),
-        Input('update_button', 'n_clicks'),
-        #[dash.dependencies.State('input-box', 'value')]
-        )
-    def update_output(n_clicks):
-        if n_clicks > 0 :
-            print("updatingdata from click callback : nclik = {}".format(n_clicks))
-            update_alldata()
-        return ''
+    # @app.callback(
+    #     Output("placeholder", "children"),
+    #     Input('update_button', 'n_clicks'),
+    #     #[dash.dependencies.State('input-box', 'value')]
+    #     )
+    # def update_output(n_clicks):
+    #     if n_clicks > 0 :
+    #         print("updatingdata from click callback : nclik = {}".format(n_clicks))
+    #         update_alldata()
+    #     return ''
 
     @app.callback(
         [Output("infected-rate", "children"),
@@ -307,8 +295,8 @@ def appcontent(app):
     #     print('slide updated via callback')
     #     return {i: '{}'.format(df['Date'][i]) for i in range(0,df.shape[0]-1,(df.shape[0]-1)//5)}
 
-
-
+# =========================================
+# STARTING THE APP
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 server = app.server
 appcontent(app)

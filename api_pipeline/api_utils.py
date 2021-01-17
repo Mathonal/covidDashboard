@@ -2,6 +2,7 @@ import requests
 import math
 import pandas as pd
 from datetime import datetime
+import time
 
 #External param
 from api_config import WORKDATAFOLDER,COLUMNTOKEEP,COLUMNTOCOMPUTE,MAFACTOR
@@ -15,9 +16,17 @@ def getRawDataToCSV(paysname):
         delete useless column
         write a CSV file in input folder : 
             workdatafolder+'/raw_'+paysname+'_ALLTable.csv'
-    """
+    """ 
+    trycount = 0
+    # try request loop
+    while trycount < 5 :
+        try :
+            rawdf=pd.DataFrame(getPandaFrameForCountry(paysname))
+        except :
+            time.sleep(1)
+        else : break
+        finally : trycount +=1
 
-    rawdf=pd.DataFrame(getPandaFrameForCountry(paysname))
     # drop useless column
     rawdf.drop(rawdf.columns.difference(COLUMNTOKEEP), axis=1,inplace=True)
     # correct date
@@ -159,7 +168,9 @@ def updateIncidenceTable(paysname,testmode=False):
         if not testmode :filepath = WORKDATAFOLDER+'/incidence_'+paysname+'_Table.csv'
         else :filepath = WORKDATAFOLDER+'/incidence_'+paysname+'_Tabletest.csv'
         
-        currentdf.to_csv(filepath,index=False)       
+        currentdf.to_csv(filepath,index=False)
+        return True       
         
-    else : print('no recent data detected for {}, incidence update cancelled'.format(paysname))
-
+    else : 
+        print('no recent data detected for {}, incidence update cancelled'.format(paysname))
+        return False
