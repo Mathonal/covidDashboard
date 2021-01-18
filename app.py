@@ -241,24 +241,6 @@ def appcontent(app):
         ]
         return cards[0],cards[1]
 
-    # @app.callback(
-    #     Output("placeholder", "children"),
-    #     Input('update_button', 'n_clicks'),
-    #     #[dash.dependencies.State('input-box', 'value')]
-    #     )
-    # def update_output(n_clicks):
-    #     if n_clicks > 0 :
-    #         print("updatingdata from click callback : nclik = {}".format(n_clicks))
-    #         update_alldata()
-    #     return ''
-    
-    # @app.callback(
-    #     Output('date-slider', 'marks'),
-    #     Input("select-country", "value"))
-    # def set_daterange(selected_country):
-    #     print('slide updated via callback')
-    #     return {i: '{}'.format(df['Date'][i]) for i in range(0,df.shape[0]-1,(df.shape[0]-1)//5)}
-
 # =========================================
 # STARTING THE APP
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
