@@ -24,9 +24,9 @@ app.layout = html.Div(
 @app.callback(Output("page-content", "children"), [Input("url", "pathname")])
 def display_page(pathname):
     if pathname == "/generic-per-country":
-        return app_page2.appcontent(app) 
+        return app_page1.appcontent(app) 
     elif pathname == "/overview" or pathname == "/": 
-        return app_page1.appcontent(app)
+        return app_page2.appcontent(app)
     else : return '404'
 
 # =========================================

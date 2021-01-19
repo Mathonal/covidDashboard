@@ -102,4 +102,3 @@ def verify_priordata(paysname):
         updateIncidenceTable(paysname)
         incdf = loadCSVData(paysname,'Inc')
     return incdf
-

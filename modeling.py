@@ -19,6 +19,32 @@ country_map = {
     "Switzerland":"Suisse",
 }
 
+continent_map = {
+    'Europe' : { 
+        "France":"France",
+        "Germany":"Allemagne",   
+        "Belgium":"Belgique",
+        "Spain":"Espagne",
+        "Greece":"Grèce",
+        "Ireland":"Ireland",
+        "Italy":"Italie",
+        "Netherlands":"Pays-bas",
+        "United Kingdom":"Royaume-unis",
+        "Sweden":"Suède",
+        "Switzerland":"Suisse",
+    },
+    'America' : { 
+        "United States of America":"Etats-unis",
+    },
+    'Asia' : { 
+        "Russian Federation":"Russie",
+        "India":"Inde",
+        "China":"Chine",
+    },
+    'Africa' : { 
+    },
+}
+
 col_map = {
     "Confirmed":"Cumulative Confirmed case",
     "Deaths":"Cumulative Deaths case",
