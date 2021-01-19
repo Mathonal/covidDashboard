@@ -10,6 +10,9 @@ import dash_core_components as dcc
 from api_pipeline.api_utils import updateIncidenceTable,getRawDataToCSV,loadCSVData
 from modeling import country_map
 
+#External param
+from api_config import LASTUPDATEFILE
+
 # ====== DISPLAY FUNCTIONS ========
 
 def Header(name, app):
@@ -50,13 +53,35 @@ def get_menu():
 def LabeledSelect(label, **kwargs):
     return dbc.FormGroup([dbc.Label(label), dbc.Select(**kwargs)])
 
+# ====== COMPUTE FUNCTIONS ==========
+def get_affecteddeaths_carddata(figlist):
+    #dfpop = pd.read_csv(DATA_PATH.joinpath("population_2019.csv"),index_col=0)
+    dfpop = pd.read_csv("workdata/population_2019.csv",index_col=0)
+    affectedvalue = 0
+    lastaffected = 0
+    deathvalue = 0
+    lastdeath = 0
+    totalpop = 0 
+    for name in figlist :
+        df = verify_priordata(name)
+
+        lastline = df.shape[0]-1
+
+        affectedvalue += df['Confirmed'][lastline]
+        lastaffected += df['Confirmed_brutincidence'][lastline]
+        deathvalue += df['Deaths'][lastline]
+        lastdeath += df['Deaths_brutincidence'][lastline]
+        totalpop += float(dfpop['population'][name])  # population noted in millions
+
+    return affectedvalue,lastaffected,deathvalue,lastdeath,totalpop
+
 # ====== PIPELINE EXEC =============
 def globaldataupdate(testmode=False):
     print('Entering global update verification')
     #datetime verification
     today_object = datetime.date.today()
     try:
-        lastdfdate_str = list(open('lastupdate.txt', 'r'))[0]
+        lastdfdate_str = list(open(LASTUPDATEFILE, 'r'))[0]
         lastdfdate = datetime.datetime.strptime(lastdfdate_str, '%Y-%m-%d').date()
     except:
         lastdfdate = 0
@@ -65,7 +90,7 @@ def globaldataupdate(testmode=False):
     #limited to one global update daily
     if today_object != lastdfdate :
         print('Executing global data update')
-        lastdfdate = open('lastupdate.txt', 'w').write(
+        lastdfdate = open(LASTUPDATEFILE, 'w').write(
                 today_object.strftime("%Y-%m-%d"))
         threading.Thread(target=update_alldata).start()
     else : print('data already updated : {}'.format(lastdfdate_str))

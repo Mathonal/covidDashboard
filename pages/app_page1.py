@@ -15,7 +15,7 @@ from app import app
 
 from api_pipeline.api_utils import updateIncidenceTable
 from utils import Header,LabeledSelect
-from utils import update_alldata,verify_priordata,globaldataupdate
+from utils import update_alldata,verify_priordata,globaldataupdate,get_affecteddeaths_carddata
 from modeling import col_map,country_map
 
 # get relative data folder
@@ -137,9 +137,11 @@ def update_figures(country_val, datatype_val, daterange, inctype_val):
     lastdfdate = datetime.datetime.strptime(lastdfdate, '%Y-%m-%d').date()
     diffdate= datetime_object-lastdfdate
     if lastdfdate != datetime_object :
-        print('lastdate in data : {} ({} days from today)'.format(lastdfdate,diffdate.days))
-        #2-1 check if selected slide value include max before update
-        print('selectedrange : {}/{};df size {}'.format(daterange[0],daterange[1],df.shape[0]-1))
+        print('lastdate in data : {} ({} days from today)'.format(
+            lastdfdate,diffdate.days))
+        #2-1 check if selected slide value include max before updating range
+        print('selectedrange : {}/{};df size {}'.format(
+            daterange[0],daterange[1],df.shape[0]-1))
         if daterange[1] == df.shape[0]-1 : updateslidemaxval_flag = True
         else : updateslidemaxval_flag = False
         #2.2 update incidence
@@ -152,7 +154,8 @@ def update_figures(country_val, datatype_val, daterange, inctype_val):
     # 3 - renew slide range to DF size
     print('range AFTER refresh {}  {}'.format(0,df.shape[0]-1))
     slidemax = df.shape[0]-1
-    slidemarksdict = {i: '{}'.format(df['Date'][i]) for i in range(0,slidemax,slidemax//5)}
+    slidemarksdict = {i: '{}'.format(df['Date'][i]) for i in range(
+        0,slidemax,slidemax//5)}
     
     # 4 - Filter dosplay based on chosen values
     # DATE RANGE
@@ -177,7 +180,15 @@ def update_figures(country_val, datatype_val, daterange, inctype_val):
             #color="condition",
             mode='lines')],
         layout=dict(
-            title="Cumulative Graph"
+            title="Cumulative Graph (Total from beginning)",
+            yaxis={
+                 "autorange": True,
+                 "showgrid": True,
+                 "showline": True,
+                 "title": "Total people",
+                 "type": "linear",
+                 "zeroline": False,
+                 },
             )
     )
 
@@ -188,55 +199,66 @@ def update_figures(country_val, datatype_val, daterange, inctype_val):
         data=[go.Scatter(x=xdf_filt['Date'],y=xdf_filt[col],name=col_map[col],mode='lines') 
              for col in incidencelist],
         layout=dict(
-            title="Incidence Graph",
+            title="Incidence Graph (new cases / day)",
             legend={
             "x": -0.0277108433735,
             "y": -0.142606516291,
-            "orientation": "h",
-            },   
+            "orientation": "h"},
+            yaxis={
+                 "autorange": True,
+                 "showgrid": True,
+                 "showline": True,
+                 "title": "New people / day",
+                 "type": "linear",
+                 "zeroline": False,
+                 },   
         )
     )
 
     return coef_fig,coef_fig2,slidemarksdict,slidemax
 
-# CARDS
+#CARD
 @app.callback(
     [Output("affected_card", "children"),
     Output("mortality_card", "children")],
     Input("select-country", "value"),
     )
 def computeCardsComponents(country_val):
-    df = verify_priordata(country_val)
-    print('updating cards')
-    # compute few data
-    lastline = df.shape[0]-1
-    mortalityrate = df['Deaths'][lastline]/df['Confirmed'][lastline]
-    # population noted in millions
-    dfpop = pd.read_csv(DATA_PATH.joinpath("population_2019.csv"),index_col=0)
-    #filepath = DATA_PATH.joinpath("population_2019.csv")
-    contaminationrate = df['Confirmed'][lastline]/(float(dfpop['population']['France'])*1000000)
+    #df = verify_priordata(country_val)
+    print('updating global cards')
+    #figlist = getFinalCountryList(group_val)
+
+    affectedvalue,lastaffected,deathvalue,lastdeath,totalpop = get_affecteddeaths_carddata([country_val])
+
+    # compute RATES
+    mortalityrate = deathvalue/affectedvalue
+    contaminationrate = affectedvalue/(totalpop*1000000)
 
     # Card components    
     cards = [
     dbc.Card(
     [
-        html.H2(f"{contaminationrate*100:.2f}%", className="card-title",id='infected-rate'),
-        html.P(f"population affected (+{df['Confirmed_brutincidence'][lastline]})", className="card-text"),
+        html.H2(f"{contaminationrate*100:.2f}% of {totalpop:.2f} millions", className="card-title",id='infected-rate'),
+        #html.P(f"population affected (+{df['Confirmed_brutincidence'][lastline]})", className="card-text"),
+        html.P(f"Population affected ; Total : {affectedvalue} (+{lastaffected} on last day)", className="card-text"),
     ],
     body=True,
-    color="dark",
-    inverse=True,
+    color="light",
     ),
     dbc.Card(
         [
-            html.H2(f"{mortalityrate*100:.2f}%", className="card-title",id='mortality-rate'),
-            html.P(f"Mortality Rate of affected (+{df['Deaths_brutincidence'][lastline]})", className="card-text"),
+            html.H2(f"{mortalityrate*100:.2f}% of {affectedvalue/1000000:.2f} millions", className="card-title",id='mortality-rate'),
+            #html.P(f"Mortality Rate of affected (+{df['Deaths_brutincidence'][lastline]})", className="card-text"),
+            html.P(f"Mortality rate of affected ; Total : {deathvalue} (+{lastdeath} on last day)", className="card-text"),
         ],
         body=True,
-        color="light",
+        color="dark",
+        inverse=True,
+
     ),
     ]
     return cards[0],cards[1]
+
 
 # =========================================
 # # STARTING THE APP

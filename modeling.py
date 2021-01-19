@@ -1,23 +1,23 @@
 
 # ==============    GLOBAL LISTS/DICTS AND DESCRIPTION =============
 
-country_map = {
-    "France":"France",
-    "Germany":"Allemagne",   
-    "Belgium":"Belgique",
-    "China":"Chine",
-    "Spain":"Espagne",
-    "United States of America":"Etats-unis",
-    "Greece":"Grèce",
-    "India":"Inde",
-    "Ireland":"Ireland",
-    "Italy":"Italie",
-    "Netherlands":"Pays-bas",
-    "United Kingdom":"Royaume-unis",
-    "Russian Federation":"Russie",
-    "Sweden":"Suède",
-    "Switzerland":"Suisse",
-}
+# country_map = {
+#     "France":"France",
+#     "Germany":"Allemagne",   
+#     "Belgium":"Belgique",
+#     "China":"Chine",
+#     "Spain":"Espagne",
+#     "United States of America":"Etats-unis",
+#     "Greece":"Grèce",
+#     "India":"Inde",
+#     "Ireland":"Ireland",
+#     "Italy":"Italie",
+#     "Netherlands":"Pays-bas",
+#     "United Kingdom":"Royaume-unis",
+#     "Russian Federation":"Russie",
+#     "Sweden":"Suède",
+#     "Switzerland":"Suisse",
+# }
 
 continent_map = {
     'Europe' : { 
@@ -35,15 +35,32 @@ continent_map = {
     },
     'America' : { 
         "United States of America":"Etats-unis",
+        "Mexico" : "Mexique",
+        #"Canada" : "Canada", bugg request return empty
+        "Brazil":"Brazil",
     },
     'Asia' : { 
         "Russian Federation":"Russie",
         "India":"Inde",
         "China":"Chine",
     },
-    'Africa' : { 
+    'Africa' : {
+        "South Africa" : "Afrique du sud",
+        "Nigeria":"Nigeria",
+        "Ethiopia":"Ethiopia"
     },
 }
+
+continentslist = ['Europe','America','Asia','Africa']
+
+def get_countrymap():
+    resultdict = {}
+    for name in continentslist:
+        somedict = {k:v for (k,v) in continent_map[name].items()}
+        resultdict.update(somedict)
+    return resultdict
+
+country_map = get_countrymap()
 
 col_map = {
     "Confirmed":"Cumulative Confirmed case",

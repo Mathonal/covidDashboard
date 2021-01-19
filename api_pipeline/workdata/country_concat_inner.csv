@@ -1,0 +1,175 @@
+country,population,slug,ISO2
+American Samoa,0.1,american-samoa,AS
+Andorra,0.1,andorra,AD
+Antigua and Barbuda,0.1,antigua-and-barbuda,AG
+Aruba,0.1,aruba,AW
+Bermuda,0.1,bermuda,BM
+Cayman Islands,0.1,cayman-islands,KY
+Dominica,0.1,dominica,DM
+Greenland,0.1,greenland,GL
+Grenada,0.1,grenada,GD
+Isle of Man,0.1,isle-of-man,IM
+Kiribati,0.1,kiribati,KI
+Marshall Islands,0.1,marshall-islands,MH
+Northern Mariana Islands,0.1,northern-mariana-islands,MP
+Seychelles,0.1,seychelles,SC
+Tonga,0.1,tonga,TO
+Guam,0.2,guam,GU
+Samoa,0.2,samoa,WS
+Sao Tome and Principe,0.2,sao-tome-and-principe,ST
+Barbados,0.3,barbados,BB
+French Polynesia,0.3,french-polynesia,PF
+New Caledonia,0.3,new-caledonia,NC
+Vanuatu,0.3,vanuatu,VU
+Belize,0.4,belize,BZ
+Brunei Darussalam,0.4,brunei,BN
+Iceland,0.4,iceland,IS
+Maldives,0.5,maldives,MV
+Malta,0.5,malta,MT
+Luxembourg,0.6,luxembourg,LU
+Montenegro,0.6,montenegro,ME
+Suriname,0.6,suriname,SR
+Solomon Islands,0.7,solomon-islands,SB
+Bhutan,0.8,bhutan,BT
+Guyana,0.8,guyana,GY
+Comoros,0.9,comoros,KM
+Fiji,0.9,fiji,FJ
+Djibouti,1,djibouti,DJ
+Cyprus,1.2,cyprus,CY
+Estonia,1.3,estonia,EE
+Mauritius,1.3,mauritius,MU
+Timor-Leste,1.3,timor-leste,TL
+Equatorial Guinea,1.4,equatorial-guinea,GQ
+Trinidad and Tobago,1.4,trinidad-and-tobago,TT
+Bahrain,1.6,bahrain,BH
+Guinea-Bissau,1.9,guinea-bissau,GW
+Latvia,1.9,latvia,LV
+Lesotho,2.1,lesotho,LS
+Slovenia,2.1,slovenia,SI
+Gabon,2.2,gabon,GA
+Botswana,2.3,botswana,BW
+Namibia,2.5,namibia,
+Moldova,2.7,moldova,MD
+Lithuania,2.8,lithuania,LT
+Qatar,2.8,qatar,QA
+Albania,2.9,albania,AL
+Jamaica,2.9,jamaica,JM
+Armenia,3,armenia,AM
+Mongolia,3.2,mongolia,MN
+Puerto Rico,3.2,puerto-rico,PR
+Bosnia and Herzegovina,3.3,bosnia-and-herzegovina,BA
+Uruguay,3.5,uruguay,UY
+Georgia,3.7,georgia,GE
+Croatia,4.1,croatia,HR
+Kuwait,4.2,kuwait,KW
+Panama,4.2,panama,PA
+Mauritania,4.5,mauritania,MR
+Central African Republic,4.7,central-african-republic,CF
+Ireland,4.9,ireland,IE
+Liberia,4.9,liberia,LR
+New Zealand,4.9,new-zealand,NZ
+Costa Rica,5,costa-rica,CR
+Oman,5,oman,OM
+Norway,5.3,norway,NO
+Finland,5.5,finland,FI
+Singapore,5.7,singapore,SG
+Denmark,5.8,denmark,DK
+Turkmenistan,5.9,turkmenistan,TM
+El Salvador,6.5,el-salvador,SV
+Nicaragua,6.5,nicaragua,NI
+Libya,6.8,libya,LY
+Lebanon,6.9,lebanon,LB
+Serbia,6.9,serbia,RS
+Bulgaria,7,bulgaria,BG
+Paraguay,7,paraguay,PY
+Lao PDR,7.2,lao-pdr,LA
+Sierra Leone,7.8,sierra-leone,SL
+Togo,8.1,togo,TG
+Switzerland,8.6,switzerland,CH
+Papua New Guinea,8.8,papua-new-guinea,PG
+Austria,8.9,austria,AT
+Israel,9.1,israel,IL
+Tajikistan,9.3,tajikistan,TJ
+Belarus,9.5,belarus,BY
+Honduras,9.7,honduras,HN
+Hungary,9.8,hungary,HU
+United Arab Emirates,9.8,united-arab-emirates,AE
+Azerbaijan,10,azerbaijan,AZ
+Jordan,10.1,jordan,JO
+Portugal,10.3,portugal,PT
+Sweden,10.3,sweden,SE
+Czech Republic,10.7,czech-republic,CZ
+Dominican Republic,10.7,dominican-republic,DO
+Greece,10.7,greece,GR
+South Sudan,11.1,south-sudan,SS
+Cuba,11.3,cuba,CU
+Haiti,11.3,haiti,HT
+Belgium,11.5,belgium,BE
+Bolivia,11.5,bolivia,BO
+Burundi,11.5,burundi,BI
+Tunisia,11.7,tunisia,TN
+Benin,11.8,benin,BJ
+Rwanda,12.6,rwanda,RW
+Guinea,12.8,guinea,GN
+Zimbabwe,14.6,zimbabwe,ZW
+Somalia,15.4,somalia,SO
+Chad,15.9,chad,TD
+Senegal,16.3,senegal,SN
+Cambodia,16.5,cambodia,KH
+Guatemala,16.6,guatemala,GT
+Netherlands,17.3,netherlands,NL
+Ecuador,17.4,ecuador,EC
+Zambia,17.9,zambia,ZM
+Kazakhstan,18.5,kazakhstan,KZ
+Malawi,18.6,malawi,MW
+Chile,19,chile,CL
+Romania,19.4,romania,RO
+Mali,19.7,mali,ML
+Burkina Faso,20.3,burkina-faso,BF
+Sri Lanka,21.8,sri-lanka,LK
+Niger,23.3,niger,NE
+Australia,25.4,australia,AU
+Cameroon,25.9,cameroon,CM
+Madagascar,27,madagascar,MG
+Nepal,28.6,nepal,NP
+Ghana,30.4,ghana,GH
+Mozambique,30.4,mozambique,MZ
+Angola,31.8,angola,AO
+Malaysia,31.9,malaysia,MY
+Peru,32.5,peru,PE
+Uzbekistan,33.6,uzbekistan,UZ
+Saudi Arabia,34.3,saudi-arabia,SA
+Morocco,36.5,morocco,MA
+Canada,37.6,canada,CA
+Afghanistan,38,afghanistan,AF
+Poland,38,poland,PL
+Iraq,39.3,iraq,IQ
+Sudan,42.8,sudan,SD
+Algeria,43.1,algeria,DZ
+Uganda,44.3,uganda,UG
+Ukraine,44.4,ukraine,UA
+Argentina,44.9,argentina,AR
+Spain,47.1,spain,ES
+Colombia,50.3,colombia,CO
+Kenya,52.6,kenya,KE
+Myanmar,54,myanmar,MM
+South Africa,58.6,south-africa,ZA
+Italy,60.3,italy,IT
+United Kingdom,66.8,united-kingdom,GB
+France,67.1,france,FR
+Thailand,69.6,thailand,TH
+Germany,83.1,germany,DE
+Turkey,83.4,turkey,TR
+Philippines,108.1,philippines,PH
+Ethiopia,112.1,ethiopia,ET
+Japan,126.3,japan,JP
+Mexico,127.6,mexico,MX
+Russian Federation,144.4,russia,RU
+Bangladesh,163,bangladesh,BD
+Nigeria,201,nigeria,NG
+Brazil,211,brazil,BR
+Pakistan,216.6,pakistan,PK
+Indonesia,270.6,indonesia,ID
+United States of America,328.2,united-states,US
+India,1366.4,india,IN
+China,1397.7,china,CN

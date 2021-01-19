@@ -15,7 +15,7 @@ from app import app
 
 from api_pipeline.api_utils import updateIncidenceTable
 from utils import Header,LabeledSelect
-from utils import loadCSVData
+from utils import loadCSVData,verify_priordata,get_affecteddeaths_carddata
 from modeling import col_map,country_map,continent_map
 
 # get relative data folder
@@ -23,6 +23,17 @@ import pathlib
 PATH = pathlib.Path(__file__).parent
 DATA_PATH = PATH.joinpath("../workdata").resolve()
 
+def getFinalCountryList(inputlist):
+    #print("inputlist : {}".format(inputlist))
+    finallist = []
+    for elem in continent_map.keys():
+        if elem in inputlist :
+            for x in list(continent_map[elem].keys()):
+                finallist.append(x)
+
+    if finallist == [] : finallist = inputlist
+    #print("FIGLIST : {}".format(finallist))
+    return finallist
 
 def getIncPerMillion(countrynamelist):
     # loading needeed data 
@@ -45,7 +56,6 @@ def getIncPerMillion(countrynamelist):
         #testserie = seriesdict[name]/(float(dfpop['population'][name]))
         #testserie = testserie.loc[(testserie>10)].reset_index(drop=True)
         #testserie = testserie    
-
 
         testdf = pd.DataFrame(testserie.tolist(),columns=[name])
         listoflist.append(testdf)
@@ -88,6 +98,13 @@ def appcontent(app):
         value=[0, wdf.shape[0]-1]
         )
 
+    # Card components
+    cards = [
+        dbc.Card(id='globalaffected_card'),
+        dbc.Card(id='globalmortality_card'),
+        #dbc.Card(id='mortality_card2')
+        ] 
+
     # Graph components
     graphs = [
         [
@@ -101,6 +118,9 @@ def appcontent(app):
         [
             Header("Dash Covid Visualization", app),
             html.Hr(), # Separation line
+            dbc.Row([dbc.Col(card) for card in cards]), # 1 row with Xcard in column
+            html.Br(),
+
             #GLOBAL SELECTORS : 1 row with x label selectors, 1 row with date
             dbc.Row(dbc.Col(labelselectors[0])),
             html.Br(),
@@ -153,15 +173,7 @@ def update_groupselect(grouptype):
 )
 def update_comparative_incidence_figures(abscisserange,countrylist):
     # Loading default Dataframe and compute data
-    print("inputlist : {}".format(countrylist))
-    figlist = []
-    for elem in continent_map.keys():
-        if elem in countrylist :
-            for x in list(continent_map[elem].keys()):
-                figlist.append(x)
-
-    if figlist == [] : figlist = countrylist
-    print("FIGLIST : {}".format(figlist))
+    figlist = getFinalCountryList(countrylist)
     # 4 - Filter dosplay based on chosen values
     # DATE RANGE
     wdf_filt = wdf.iloc[abscisserange[0]:abscisserange[1]]
@@ -172,8 +184,63 @@ def update_comparative_incidence_figures(abscisserange,countrylist):
             go.Scatter(x=wdf_filt.index,y=wdf_filt[countryname],
                 name=countryname,mode='lines') for countryname in figlist],
         layout=dict(
-            title="Comparative incidence Graph (daily affecteds / million; start a inc > 1000per day)"
+            title="Comparative incidence Graph",
+            xaxis={
+                "autorange": True,
+                "showline": True,
+                "title": "days since first incidence > 100/day",
+                "type": "category",
+                         },
+            yaxis={
+                 "autorange": True,
+                 "showgrid": True,
+                 "showline": True,
+                 "title": "new daily affected / million population",
+                 "type": "linear",
+                 "zeroline": False,
+                 }
             )
     )
-
     return coef_fig
+
+# CARDS
+@app.callback(
+    [Output("globalaffected_card", "children"),
+    Output("globalmortality_card", "children")],
+    Input("check-grouplist", "value"),
+    )
+def computeCardsComponents(group_val):
+    #df = verify_priordata(country_val)
+    print('updating global cards')
+    figlist = getFinalCountryList(group_val)
+
+    affectedvalue,lastaffected,deathvalue,lastdeath,totalpop = get_affecteddeaths_carddata(figlist)
+
+    # compute RATES
+    mortalityrate = deathvalue/affectedvalue
+    contaminationrate = affectedvalue/(totalpop*1000000)
+
+    # Card components    
+    cards = [
+    dbc.Card(
+    [
+        html.H2(f"{contaminationrate*100:.2f}% of {totalpop:.2f} millions", className="card-title",id='infected-rate'),
+        #html.P(f"population affected (+{df['Confirmed_brutincidence'][lastline]})", className="card-text"),
+        html.P(f"Population affected ; Total : {affectedvalue} (+{lastaffected} on last day)", className="card-text"),
+    ],
+    body=True,
+    color="light",
+    ),
+    dbc.Card(
+        [
+            html.H2(f"{mortalityrate*100:.2f}% of {affectedvalue/1000000:.2f} millions", className="card-title",id='mortality-rate'),
+            #html.P(f"Mortality Rate of affected (+{df['Deaths_brutincidence'][lastline]})", className="card-text"),
+            html.P(f"Mortality rate of affected ; Total : {deathvalue} (+{lastdeath} on last day)", className="card-text"),
+        ],
+        body=True,
+        color="dark",
+        inverse=True,
+
+    ),
+    ]
+    return cards[0],cards[1]
