@@ -15,28 +15,26 @@ from api_config import LASTUPDATEFILE
 
 # ====== DISPLAY FUNCTIONS ========
 
-def Header(name, app):
-    return html.Div([get_header(name, app), html.Br([]), get_menu()])
+def Header(app):
+    return html.Div([get_header(app), html.Br([]), get_menu()])
 
-def get_header(name, app):
-    title = html.H2(name, style={"margin-top": 5})
+def get_header(app):
+    title = html.H2("Dashboard suivi Covid19", style={"margin-top": 5})
+    subtitle = html.H5("par Mathonal", style={"margin-top": 5})
     logo = html.Img(
         src=app.get_asset_url("dash-logo.png"), style={"float": "right", "height": 50}
     )
-    #update_button = html.Button('Last Data', id='update_button',n_clicks=0)
-    #return dbc.Row([dbc.Col(title, md=7), dbc.Col(update_button, md=2), dbc.Col(logo, md=3)])
-
-    return dbc.Row([dbc.Col(title, md=9), dbc.Col(logo, md=3)])
+    return dbc.Row([dbc.Col(title, md=6),dbc.Col(subtitle, md=3), dbc.Col(logo, md=3)])
 
 def get_menu():
     PagesList = [
             dbc.Card(dbc.CardLink(
-                "overview",
+                "Vue Globale",
                 href="/overview",
                 className="tab first",
             )),
             dbc.Card(dbc.CardLink(
-                "Generic Data per country",
+                "Details par pays",
                 href="/generic-per-country",
                 className="tab",
             )),
@@ -73,7 +71,39 @@ def get_affecteddeaths_carddata(figlist):
         lastdeath += df['Deaths_brutincidence'][lastline]
         totalpop += float(dfpop['population'][name])  # population noted in millions
 
-    return affectedvalue,lastaffected,deathvalue,lastdeath,totalpop
+    #return affectedvalue,lastaffected,deathvalue,lastdeath,totalpop
+
+    # compute RATES
+    mortalityrate = deathvalue/affectedvalue
+    contaminationrate = affectedvalue/(totalpop*1000000)
+
+    # Card components    
+    cards = [
+    dbc.Card(
+    [
+        #html.H2(f"{contaminationrate*100:.2f}% of {totalpop:.2f} millions", className="card-title",id='infected-rate'),
+        #html.P(f"Population affected ; Total : {affectedvalue} (+{lastaffected} on last day)", className="card-text"),
+        html.H2(f"{contaminationrate*100:.2f}% sur {totalpop:.2f} millions", className="card-title",id='infected-rate'),
+        html.P(f"Population touchée ; Total : {affectedvalue} (+{lastaffected} hier)", className="card-text"),
+    ],
+    body=True,
+    color="light",
+    ),
+    dbc.Card(
+        [
+            #html.H2(f"{mortalityrate*100:.2f}% of {affectedvalue/1000000:.2f} millions", className="card-title",id='mortality-rate'),
+            #html.P(f"Mortality rate of affected ; Total : {deathvalue} (+{lastdeath} on last day)", className="card-text"),
+            html.H2(f"{mortalityrate*100:.2f}% sur {affectedvalue/1000000:.2f} millions", className="card-title",id='mortality-rate'),
+            html.P(f"Mortalité des cas confirmés ; Total : {deathvalue} (+{lastdeath} hier)", className="card-text"),
+        ],
+        body=True,
+        color="dark",
+        inverse=True,
+
+    ),
+    ]
+
+    return cards
 
 # ====== PIPELINE EXEC =============
 def globaldataupdate(testmode=False):

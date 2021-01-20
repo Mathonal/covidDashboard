@@ -40,13 +40,15 @@ def appcontent(app):
                 id="select-country",
                 options=[{"label": v, "value": k} for k,v in country_map.items()],
                 value=list(country_map.keys())[0],
-                label="Filter by Country",
+                #label="Filter by Country",
+                label="Filtre par pays",
             ),
             LabeledSelect(
                 id="select-type",
                 options=[{"label": v, "value": k} for k, v in list(col_map.items())[0:4]],
                 value='Confirmed',
-                label="Filter by data type",
+                #label="Filter by data type",
+                label="Filtre par type de cas",
             ), 
         ]
 
@@ -62,9 +64,12 @@ def appcontent(app):
     incidencetypeselector = dcc.Checklist(
             id='inc-type',
             options=[
-            {'label': 'brut incidence   ', 'value': 'brut'},
-            {'label': 'moving average (7days)   ', 'value': 'MA'},
-            {'label': 'exponential moving average', 'value': 'EMA'}
+            # {'label': 'brut incidence', 'value': 'brut'},
+            # {'label': 'moving average (7days)', 'value': 'MA'},
+            # {'label': 'exponential moving average', 'value': 'EMA'}
+            {'label': 'Incidence brute', 'value': 'brut'},
+            {'label': 'Moyenne mobile', 'value': 'MA'},
+            {'label': 'Moyenne exponentielle', 'value': 'EMA'}
             ],
             value=['MA', 'EMA'],
             labelStyle={'display': 'inline-block'}
@@ -92,7 +97,7 @@ def appcontent(app):
     #app.layout = dbc.Container(
     page1_layout = html.Div(dbc.Container(
         [
-            Header("Dash Covid Visualization", app),
+            Header(app),
             html.Hr(), # Separation line
             dbc.Row([dbc.Col(card) for card in cards]), # 1 row with Xcard in column
             html.Br(),
@@ -180,12 +185,13 @@ def update_figures(country_val, datatype_val, daterange, inctype_val):
             #color="condition",
             mode='lines')],
         layout=dict(
-            title="Cumulative Graph (Total from beginning)",
+            title="Graphe de cumul",
+            #title="Cumulative Graph (Total from beginning)",
             yaxis={
                  "autorange": True,
                  "showgrid": True,
                  "showline": True,
-                 "title": "Total people",
+                 "title": "Nombre total",#"title": "Total number",
                  "type": "linear",
                  "zeroline": False,
                  },
@@ -199,7 +205,8 @@ def update_figures(country_val, datatype_val, daterange, inctype_val):
         data=[go.Scatter(x=xdf_filt['Date'],y=xdf_filt[col],name=col_map[col],mode='lines') 
              for col in incidencelist],
         layout=dict(
-            title="Incidence Graph (new cases / day)",
+            #title="Incidence Graph (new cases / day)",
+            title="Graphe d'incidence (Nouveaux cas par jour)",
             legend={
             "x": -0.0277108433735,
             "y": -0.142606516291,
@@ -208,7 +215,7 @@ def update_figures(country_val, datatype_val, daterange, inctype_val):
                  "autorange": True,
                  "showgrid": True,
                  "showline": True,
-                 "title": "New people / day",
+                 "title": "Nombre supplémentaire / jour",#"title": "New people / day",
                  "type": "linear",
                  "zeroline": False,
                  },   
@@ -228,37 +235,9 @@ def computeCardsComponents(country_val):
     print('updating global cards')
     #figlist = getFinalCountryList(group_val)
 
-    affectedvalue,lastaffected,deathvalue,lastdeath,totalpop = get_affecteddeaths_carddata([country_val])
+    cardlist = get_affecteddeaths_carddata([country_val])
 
-    # compute RATES
-    mortalityrate = deathvalue/affectedvalue
-    contaminationrate = affectedvalue/(totalpop*1000000)
-
-    # Card components    
-    cards = [
-    dbc.Card(
-    [
-        html.H2(f"{contaminationrate*100:.2f}% of {totalpop:.2f} millions", className="card-title",id='infected-rate'),
-        #html.P(f"population affected (+{df['Confirmed_brutincidence'][lastline]})", className="card-text"),
-        html.P(f"Population affected ; Total : {affectedvalue} (+{lastaffected} on last day)", className="card-text"),
-    ],
-    body=True,
-    color="light",
-    ),
-    dbc.Card(
-        [
-            html.H2(f"{mortalityrate*100:.2f}% of {affectedvalue/1000000:.2f} millions", className="card-title",id='mortality-rate'),
-            #html.P(f"Mortality Rate of affected (+{df['Deaths_brutincidence'][lastline]})", className="card-text"),
-            html.P(f"Mortality rate of affected ; Total : {deathvalue} (+{lastdeath} on last day)", className="card-text"),
-        ],
-        body=True,
-        color="dark",
-        inverse=True,
-
-    ),
-    ]
-    return cards[0],cards[1]
-
+    return cardlist[0],cardlist[1]
 
 # =========================================
 # # STARTING THE APP

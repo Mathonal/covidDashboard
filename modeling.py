@@ -63,6 +63,26 @@ def get_countrymap():
 country_map = get_countrymap()
 
 col_map = {
+    "Confirmed":"Nombre de cas confirmés cumulés",
+    "Deaths":"Nombre de décès cumulés",
+    "Recovered":"Nombre de guérisons cumulées ",
+    "Active":"Nombre de cas actifs cumulés",
+    #"Date":"Dates",
+    "Confirmed_brutincidence":"Incidence brute des cas confirmés ",
+    "Confirmed_MMincidence":"Moyenne mobile d'incidence des cas confirmés (7jours)",
+    "Confirmed_eMMincidence":"Moyenne exponentielle d'incidence des cas confirmés",
+    "Deaths_brutincidence":"Incidence brute des décès",
+    "Deaths_MMincidence":"Moyenne mobile d'incidence des décès (7jours)",
+    "Deaths_eMMincidence":"Moyenne exponentielle d'incidence de décès",
+    "Recovered_brutincidence":"Incidence brute des guérisons",
+    "Recovered_MMincidence":"Moyenne mobile d'incidence des guérisons (7jours)",
+    "Recovered_eMMincidence":"Moyenne exponentielle d'incidence de guérisons",
+    "Active_brutincidence":"Incidence brute des cas actifs",
+    "Active_MMincidence":"Moyenne mobile d'incidence des cas actifs (7jours)",
+    "Active_eMMincidence":"Moyenne exponentielle d'incidence de cas actifs",
+}
+
+col_map_eng = {
     "Confirmed":"Cumulative Confirmed case",
     "Deaths":"Cumulative Deaths case",
     "Recovered":"Cumulative Recovered case",

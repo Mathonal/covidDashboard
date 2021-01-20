@@ -23,19 +23,8 @@ import pathlib
 PATH = pathlib.Path(__file__).parent
 DATA_PATH = PATH.joinpath("../workdata").resolve()
 
-def getFinalCountryList(inputlist):
-    #print("inputlist : {}".format(inputlist))
-    finallist = []
-    for elem in continent_map.keys():
-        if elem in inputlist :
-            for x in list(continent_map[elem].keys()):
-                finallist.append(x)
 
-    if finallist == [] : finallist = inputlist
-    #print("FIGLIST : {}".format(finallist))
-    return finallist
-
-def getIncPerMillion(countrynamelist):
+def getIncPerMillion(countrynamelist,dataScope='date'):
     # loading needeed data 
     dfpop = pd.read_csv(DATA_PATH.joinpath("population_2019.csv"),index_col=0)
 
@@ -44,26 +33,31 @@ def getIncPerMillion(countrynamelist):
     for name in countrynamelist :
         # load country data
         updateIncidenceTable(name)
-        seriesdict[name] = loadCSVData(name,'Inc')['Confirmed_eMMincidence']
-
+        allframe = loadCSVData(name,'Inc')
+        seriesdict[name] = allframe['Confirmed_eMMincidence']
         # transformation
 
         #starting with absolute value of inc
-        testserie = seriesdict[name].loc[(seriesdict[name]>100)].reset_index(drop=True)
-        testserie = testserie/(float(dfpop['population'][name]))
+        if dataScope == 'date' :
+            testserie = seriesdict[name]#.loc[(seriesdict[name]>100)].reset_index(drop=True)
+        else : testserie = seriesdict[name].loc[(seriesdict[name]>100)].reset_index(drop=True)
 
-        # starting with inc per million > 10
+        testserie = testserie/(float(dfpop['population'][name]))
+        
+        #starting with inc per million > 10
         #testserie = seriesdict[name]/(float(dfpop['population'][name]))
         #testserie = testserie.loc[(testserie>10)].reset_index(drop=True)
         #testserie = testserie    
-
-        testdf = pd.DataFrame(testserie.tolist(),columns=[name])
+        if dataScope == 'date' : 
+            testdf = pd.DataFrame(testserie.tolist(),columns=[name],
+                index=[datetime.datetime.strptime(x, '%Y-%m-%d').date() for x in allframe['Date']])
+        else : testdf = pd.DataFrame(testserie.tolist(),columns=[name])
         listoflist.append(testdf)
     
     comparativeinc= pd.concat(listoflist, axis=1)
     return comparativeinc
 
-wdf = getIncPerMillion(list(country_map.keys()))
+wdf = getIncPerMillion(list(country_map.keys()),'date')
 
 def appcontent(app):
   
@@ -116,7 +110,7 @@ def appcontent(app):
     #app.layout = dbc.Container(
     page1_layout = html.Div(dbc.Container(
         [
-            Header("Dash Covid Visualization", app),
+            Header(app),
             html.Hr(), # Separation line
             dbc.Row([dbc.Col(card) for card in cards]), # 1 row with Xcard in column
             html.Br(),
@@ -137,6 +131,7 @@ def appcontent(app):
     ))
     return page1_layout
 
+# SELECTORS
 @app.callback(
     [
     Output("check-grouplist", "options"),Output("check-grouplist", "value")
@@ -164,6 +159,8 @@ def update_groupselect(grouptype):
 
     return checkoptions,checkvalue
 
+
+# GRAPHES 
 @app.callback(
     Output("graph-comparativeInc", "figure"),
     [
@@ -173,7 +170,9 @@ def update_groupselect(grouptype):
 )
 def update_comparative_incidence_figures(abscisserange,countrylist):
     # Loading default Dataframe and compute data
+    wdf = getIncPerMillion(list(country_map.keys()),'date')
     figlist = getFinalCountryList(countrylist)
+
     # 4 - Filter dosplay based on chosen values
     # DATE RANGE
     wdf_filt = wdf.iloc[abscisserange[0]:abscisserange[1]]
@@ -181,21 +180,25 @@ def update_comparative_incidence_figures(abscisserange,countrylist):
     # comparative incidence graphe
     coef_fig = go.Figure(
         data=[
+            #go.Scatter(x=wdf_filt.index,y=wdf_filt[countryname],
             go.Scatter(x=wdf_filt.index,y=wdf_filt[countryname],
                 name=countryname,mode='lines') for countryname in figlist],
         layout=dict(
-            title="Comparative incidence Graph",
+            #title="Comparative incidence Graph",
+            title="Graphe d'incidence comparative des cas confirmés par million de personnes",
             xaxis={
                 "autorange": True,
                 "showline": True,
-                "title": "days since first incidence > 100/day",
-                "type": "category",
+                #"title": "days since first incidence > 100/day",
+                #"title": "days since first incidence > 100/day",
+                #"type": "category",
                          },
             yaxis={
                  "autorange": True,
                  "showgrid": True,
                  "showline": True,
-                 "title": "new daily affected / million population",
+                 #"title": "new daily affected / million population",
+                 "title": "Nouveaux cas quotidien par million d'habitants",
                  "type": "linear",
                  "zeroline": False,
                  }
@@ -204,6 +207,18 @@ def update_comparative_incidence_figures(abscisserange,countrylist):
     return coef_fig
 
 # CARDS
+def getFinalCountryList(inputlist):
+    #print("inputlist : {}".format(inputlist))
+    finallist = []
+    for elem in continent_map.keys():
+        if elem in inputlist :
+            for x in list(continent_map[elem].keys()):
+                finallist.append(x)
+
+    if finallist == [] : finallist = inputlist
+    #print("FIGLIST : {}".format(finallist))
+    return finallist
+
 @app.callback(
     [Output("globalaffected_card", "children"),
     Output("globalmortality_card", "children")],
@@ -213,34 +228,6 @@ def computeCardsComponents(group_val):
     #df = verify_priordata(country_val)
     print('updating global cards')
     figlist = getFinalCountryList(group_val)
+    cardlist = get_affecteddeaths_carddata(figlist)
 
-    affectedvalue,lastaffected,deathvalue,lastdeath,totalpop = get_affecteddeaths_carddata(figlist)
-
-    # compute RATES
-    mortalityrate = deathvalue/affectedvalue
-    contaminationrate = affectedvalue/(totalpop*1000000)
-
-    # Card components    
-    cards = [
-    dbc.Card(
-    [
-        html.H2(f"{contaminationrate*100:.2f}% of {totalpop:.2f} millions", className="card-title",id='infected-rate'),
-        #html.P(f"population affected (+{df['Confirmed_brutincidence'][lastline]})", className="card-text"),
-        html.P(f"Population affected ; Total : {affectedvalue} (+{lastaffected} on last day)", className="card-text"),
-    ],
-    body=True,
-    color="light",
-    ),
-    dbc.Card(
-        [
-            html.H2(f"{mortalityrate*100:.2f}% of {affectedvalue/1000000:.2f} millions", className="card-title",id='mortality-rate'),
-            #html.P(f"Mortality Rate of affected (+{df['Deaths_brutincidence'][lastline]})", className="card-text"),
-            html.P(f"Mortality rate of affected ; Total : {deathvalue} (+{lastdeath} on last day)", className="card-text"),
-        ],
-        body=True,
-        color="dark",
-        inverse=True,
-
-    ),
-    ]
-    return cards[0],cards[1]
+    return cardlist[0],cardlist[1]
