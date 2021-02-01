@@ -1,8 +1,8 @@
 
 # =========== API_UTILS PARAMS =============
 WORKDATAFOLDER = 'workdata'
-RAWDATA = 'raw'
-INCIDENCEDATA = 'inc'
+RAWFOLDER = 'raw'
+INCFOLDER = 'inc'
 #
 COLUMNTOKEEP = ['Confirmed','Deaths','Recovered','Active','Date']
 COLUMNTOCOMPUTE = ['Confirmed','Deaths','Recovered','Active']

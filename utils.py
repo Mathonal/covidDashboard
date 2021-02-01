@@ -13,7 +13,15 @@ from api_pipeline.api_utils import updateIncidenceTable,getRawDataToCSV,loadCSVD
 from modeling import country_map
 
 #External param
-from api_config import LASTUPDATEFILE
+from api_config import (
+    LASTUPDATEFILE,
+    WORKDATAFOLDER
+    )
+
+# get relative data folder
+import pathlib
+PATH = pathlib.Path(__file__)
+DATA_PATH = PATH.joinpath("../workdata").resolve()
 
 # ====== DISPLAY FUNCTIONS ========
 
@@ -81,7 +89,10 @@ def get_affecteddeaths_carddata(figlist):
     totalpop = 0 
     for name in figlist :
         #df = verify_priordata(name)
-        df = loadCSVData(name,'Inc')
+        try :
+            df = loadCSVData(name,'Inc')
+        except:
+            continue
 
         lastline = df.shape[0]-1
 
@@ -134,7 +145,9 @@ def graphcountryperf(countrylist):
     indexlist = []
 
     for name in countrylist :
-        df = loadCSVData(name,'Inc')
+        try: df = loadCSVData(name,'Inc')
+        except : continue
+        
         lastline = df.shape[0]-1
 
         indexlist.append(name)
@@ -190,9 +203,54 @@ def graphcountryperf(countrylist):
     graphperf.update_layout(showlegend=False)
     return dcc.Graph(figure=graphperf)
 
+def getIncPerMillion(countrynamelist,dataScope='date'):
+    # loading needeed data 
+    dfpop = pd.read_csv(DATA_PATH.joinpath("population_2019.csv"),index_col=0)
 
+    listoflist = []
+    seriesdict = {}
+    updatedcountrylist = countrynamelist.copy()
+
+    for name in countrynamelist :
+        # load country data
+        # updateIncidenceTable(name) cutting update for faster display 
+        try :
+            allframe = loadCSVData(name,'Inc')
+        except:
+            updatedcountrylist.remove(name)
+            continue
+        # need to add a error treatment if file not found
+        seriesdict[name] = allframe['Confirmed_eMMincidence']
+        
+        # transformation
+        #starting with absolute value of inc
+        if dataScope == 'date' :
+            testserie = seriesdict[name]#.loc[(seriesdict[name]>100)].reset_index(drop=True)
+        else : testserie = seriesdict[name].loc[(seriesdict[name]>100)].reset_index(drop=True)
+
+        testserie = testserie/(float(dfpop['population'][name]))
+        
+        #starting with inc per million > 10
+        #testserie = seriesdict[name]/(float(dfpop['population'][name]))
+        #testserie = testserie.loc[(testserie>10)].reset_index(drop=True)
+        #testserie = testserie    
+        if dataScope == 'date' : 
+            testdf = pd.DataFrame(testserie.tolist(),columns=[name],
+                index=[datetime.datetime.strptime(x, '%Y-%m-%d').date() for x in allframe['Date']])
+        else : testdf = pd.DataFrame(testserie.tolist(),columns=[name])
+        listoflist.append(testdf)
+    
+    comparativeinc= pd.concat(listoflist, axis=1)
+
+    return comparativeinc,updatedcountrylist
 # ====== PIPELINE EXEC =============
 def globaldataupdate(testmode=False):
+    """
+        determine if a global data update is launched :
+            - last update file do not exist
+            - date written in last update file is outdated
+            - if testmode is true 
+    """
     print('Entering global update verification')
     #datetime verification
     today_object = datetime.date.today()
@@ -200,6 +258,7 @@ def globaldataupdate(testmode=False):
         lastdfdate_str = list(open(LASTUPDATEFILE, 'r'))[0]
         lastdfdate = datetime.datetime.strptime(lastdfdate_str, '%Y-%m-%d').date()
     except:
+        lastdfdate_str = 0
         lastdfdate = 0
 
     if testmode : lastdfdate = 0

@@ -6,7 +6,15 @@ import time
 import os
 
 #External param
-from api_config import WORKDATAFOLDER,COLUMNTOKEEP,COLUMNTOCOMPUTE,MAFACTOR
+from api_config import (
+    WORKDATAFOLDER,RAWFOLDER,INCFOLDER,
+    COLUMNTOKEEP,COLUMNTOCOMPUTE,
+    MAFACTOR
+    )
+
+import pathlib
+PATH = pathlib.Path(__file__).parent
+DATA_PATH = PATH.joinpath("../",WORKDATAFOLDER).resolve()
 
 #===========================================
 # EXTRACTION
@@ -35,7 +43,9 @@ def getRawDataToCSV(paysname):
     # correct date
     correctDateOnPandaFrame(rawdf)
     # write csv with raw files
-    filepath = WORKDATAFOLDER+'/raw_'+paysname+'_ALLTable.csv'
+    #filepath = WORKDATAFOLDER+'/raw_'+paysname+'_ALLTable.csv'
+    filepath = DATA_PATH.joinpath(RAWFOLDER,'raw_'+paysname+'_ALLTable.csv')
+
     rawdf.to_csv(filepath,index=False)
 
 def getPandaFrameForCountry(CountryName):
@@ -119,10 +129,11 @@ def incidenceExpMovingAverage(rawData,IncColumnName,alpha=0.1):
 
 def loadCSVData(paysname,Datatype):
     if Datatype == 'Raw':
-        filepath = WORKDATAFOLDER+'/raw_'+paysname+'_ALLTable.csv'
+        #filepath = WORKDATAFOLDER+'/raw_'+paysname+'_ALLTable.csv'
+        filepath = DATA_PATH.joinpath(RAWFOLDER,'raw_'+paysname+'_ALLTable.csv')
     elif Datatype == 'Inc':
-        filepath = WORKDATAFOLDER+'/incidence_'+paysname+'_Table.csv'
-
+        #filepath = WORKDATAFOLDER+'/incidence_'+paysname+'_Table.csv'
+        filepath = DATA_PATH.joinpath(INCFOLDER,'incidence_'+paysname+'_Table.csv')
     try:
         paysdf = pd.read_csv(filepath)
     except:
@@ -172,7 +183,9 @@ def updateIncidenceTable(paysname,testmode=False):
             currentdf[colname+'_eMMincidence'] = incidenceExpMovingAverage(currentdf,brutname,0.1)
         
         # testmode write file in other name to compare with old file.
-        if not testmode :filepath = WORKDATAFOLDER+'/incidence_'+paysname+'_Table.csv'
+        if not testmode :
+            #filepath = WORKDATAFOLDER+'/incidence_'+paysname+'_Table.csv'
+            filepath = DATA_PATH.joinpath(INCFOLDER,'incidence_'+paysname+'_Table.csv')
         else :filepath = WORKDATAFOLDER+'/incidence_'+paysname+'_Tabletest.csv'
         
         # saving to pdf

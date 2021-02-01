@@ -17,7 +17,8 @@ from api_pipeline.api_utils import updateIncidenceTable
 from utils import Header,LabeledSelect
 from utils import (loadCSVData,verify_priordata,
     get_affecteddeaths_carddata,
-    graphcountryperf
+    graphcountryperf,
+    getIncPerMillion
     )
 from modeling import col_map,country_map,continent_map
 
@@ -26,42 +27,7 @@ import pathlib
 PATH = pathlib.Path(__file__).parent
 DATA_PATH = PATH.joinpath("../workdata").resolve()
 
-
-def getIncPerMillion(countrynamelist,dataScope='date'):
-    # loading needeed data 
-    dfpop = pd.read_csv(DATA_PATH.joinpath("population_2019.csv"),index_col=0)
-
-    listoflist = []
-    seriesdict = {}
-    for name in countrynamelist :
-        # load country data
-        # updateIncidenceTable(name) cutting update for faster display 
-        allframe = loadCSVData(name,'Inc') 
-        # need to add a error treatment if file not found
-        seriesdict[name] = allframe['Confirmed_eMMincidence']
-        
-        # transformation
-        #starting with absolute value of inc
-        if dataScope == 'date' :
-            testserie = seriesdict[name]#.loc[(seriesdict[name]>100)].reset_index(drop=True)
-        else : testserie = seriesdict[name].loc[(seriesdict[name]>100)].reset_index(drop=True)
-
-        testserie = testserie/(float(dfpop['population'][name]))
-        
-        #starting with inc per million > 10
-        #testserie = seriesdict[name]/(float(dfpop['population'][name]))
-        #testserie = testserie.loc[(testserie>10)].reset_index(drop=True)
-        #testserie = testserie    
-        if dataScope == 'date' : 
-            testdf = pd.DataFrame(testserie.tolist(),columns=[name],
-                index=[datetime.datetime.strptime(x, '%Y-%m-%d').date() for x in allframe['Date']])
-        else : testdf = pd.DataFrame(testserie.tolist(),columns=[name])
-        listoflist.append(testdf)
-    
-    comparativeinc= pd.concat(listoflist, axis=1)
-    return comparativeinc
-
-wdf = getIncPerMillion(list(country_map.keys()),'date')
+wdf,clist = getIncPerMillion(list(country_map.keys()),'date')
 
 def appcontent(app):
   
@@ -190,8 +156,9 @@ def update_groupselect(grouptype):
 )
 def update_comparative_incidence_figures(abscisserange,countrylist):
     # Loading default Dataframe and compute data
-    wdf = getIncPerMillion(list(country_map.keys()),'date')
     figlist = getFinalCountryList(countrylist)
+    #wdf,figlist = getIncPerMillion(list(country_map.keys()),'date')
+    wdf,figlist = getIncPerMillion(figlist,'date')
 
     # 4 - Filter dosplay based on chosen values
     # DATE RANGE

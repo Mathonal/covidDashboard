@@ -3,3 +3,6 @@ __pycache__/
 .ipynb_checkpoints/
 *.py[cod]
 .env
+# CSV from api and light compute
+raw/
+inc/
