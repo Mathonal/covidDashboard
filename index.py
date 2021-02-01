@@ -27,7 +27,7 @@ def display_page(pathname):
         return app_page1.appcontent(app) 
     elif pathname == "/overview" or pathname == "/": 
         return app_page2.appcontent(app)
-    else : return ' ERROR 404'
+    else : return 'ERROR 404'
 
 # =========================================
 if __name__ == "__main__":

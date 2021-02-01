@@ -14,8 +14,8 @@ pd.options.mode.chained_assignment = None
 from app import app
 
 from api_pipeline.api_utils import updateIncidenceTable
-from utils import Header,LabeledSelect
-from utils import update_alldata,verify_priordata,globaldataupdate,get_affecteddeaths_carddata
+from utils import Header,LabeledSelect,refreshdatesliderange
+from utils import loadCSVData,update_alldata,verify_priordata,globaldataupdate,get_affecteddeaths_carddata
 from modeling import col_map,country_map
 
 # get relative data folder
@@ -31,7 +31,8 @@ DEFAULTCOUNTRY = list(country_map.keys())[0]
 
 def appcontent(app):
     # Loading default Dataframe and compute data
-    df = verify_priordata(DEFAULTCOUNTRY)
+    # df = verify_priordata(DEFAULTCOUNTRY)
+    df = loadCSVData(DEFAULTCOUNTRY,'Inc')
    
     # ================== LAYOUT=========================
 
@@ -122,6 +123,7 @@ def appcontent(app):
     Output("graph-incidence", "figure"),
     Output('date-slider', 'marks'),
     Output('date-slider', 'max'),
+    #Output("date-slider", "value"),
     ],
     [Input("select-country", "value"),
     Input("select-type", "value"),
@@ -131,37 +133,17 @@ def appcontent(app):
 def update_figures(country_val, datatype_val, daterange, inctype_val):
     # 1 - load country file
     #filepath = "workdata/incidence_"+country_val+"_Table.csv"
-    filepath = DATA_PATH.joinpath("incidence_"+country_val+"_Table.csv")
+    #filepath = DATA_PATH.joinpath("incidence_"+country_val+"_Table.csv")
     #df = pd.read_csv(filepath)
-    df = verify_priordata(country_val)
-
-    print('range BEFORE refresh {}  {}'.format(0,df.shape[0]-1))
-    # 2 - verification if up to date
-    datetime_object = datetime.date.today()
-    lastdfdate = df['Date'][df.shape[0]-1]
-    lastdfdate = datetime.datetime.strptime(lastdfdate, '%Y-%m-%d').date()
-    diffdate= datetime_object-lastdfdate
-    if lastdfdate != datetime_object :
-        print('lastdate in data : {} ({} days from today)'.format(
-            lastdfdate,diffdate.days))
-        #2-1 check if selected slide value include max before updating range
-        print('selectedrange : {}/{};df size {}'.format(
-            daterange[0],daterange[1],df.shape[0]-1))
-        if daterange[1] == df.shape[0]-1 : updateslidemaxval_flag = True
-        else : updateslidemaxval_flag = False
-        #2.2 update incidence
-        updateIncidenceTable(country_val)
-        df = pd.read_csv(filepath)
-        #2.3 replace slider max val if needed
-        if updateslidemaxval_flag and daterange[1] != df.shape[0]-1 :
-            daterange[1] = df.shape[0]-1
-
-    # 3 - renew slide range to DF size
-    print('range AFTER refresh {}  {}'.format(0,df.shape[0]-1))
-    slidemax = df.shape[0]-1
-    slidemarksdict = {i: '{}'.format(df['Date'][i]) for i in range(
-        0,slidemax,slidemax//5)}
+    #df = verify_priordata(country_val)
+    df = loadCSVData(country_val,'Inc')
     
+    # missing something to refresh sliderange value if data length is different
+    # from country to country
+
+    # 3 refresh sliderange
+    slidemarksdict,slidemaxval = refreshdatesliderange(df)
+
     # 4 - Filter dosplay based on chosen values
     # DATE RANGE
     xdf_filt = df.iloc[daterange[0]:daterange[1]]
@@ -222,7 +204,7 @@ def update_figures(country_val, datatype_val, daterange, inctype_val):
         )
     )
 
-    return coef_fig,coef_fig2,slidemarksdict,slidemax
+    return coef_fig,coef_fig2,slidemarksdict,slidemaxval #,daterange
 
 #CARD
 @app.callback(

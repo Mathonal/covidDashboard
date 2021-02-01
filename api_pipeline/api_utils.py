@@ -3,6 +3,7 @@ import math
 import pandas as pd
 from datetime import datetime
 import time
+import os
 
 #External param
 from api_config import WORKDATAFOLDER,COLUMNTOKEEP,COLUMNTOCOMPUTE,MAFACTOR
@@ -23,6 +24,8 @@ def getRawDataToCSV(paysname):
         try :
             rawdf=pd.DataFrame(getPandaFrameForCountry(paysname))
         except :
+            print('getRawDataToCSV : API Error for {}. loop {}'
+                .format(paysname,str(trycount)))
             time.sleep(1)
         else : break
         finally : trycount +=1
@@ -133,12 +136,15 @@ def updateIncidenceTable(paysname,testmode=False):
         verify if they have the same number of line 
         and complete/update the Incidence table if needed
     """
+    print('launch updateIncidenceTable')
     #loadexisting files
     try:
         rawdf = loadCSVData(paysname,'Raw')
     except FileNotFoundError:
         getRawDataToCSV(paysname)
         rawdf = loadCSVData(paysname,'Raw')
+        # HERE IS an EXECUTION PROBLEM if raw data fails, no backup
+        # there is a loop of requests in getrawdata function (3-5x) 
 
     try:
         incdf = loadCSVData(paysname,'Inc')
@@ -146,10 +152,11 @@ def updateIncidenceTable(paysname,testmode=False):
     except FileNotFoundError:
         incdfsize = 0
 
+    # comparing nb of lines
     datadelta = rawdf.shape[0]-incdfsize
     if datadelta > 0: # new lines to add
-
-        print('new data detected : {} more lines'.format(datadelta))
+        print('new data detected for {} : {} more lines'
+            .format(paysname,datadelta))
         # add new raw data to Incidence DF
         startindex = max(0,incdfsize)
         deltadf = rawdf.loc[startindex:]
@@ -159,18 +166,19 @@ def updateIncidenceTable(paysname,testmode=False):
         # compute incidence types for each column 
         for colname in COLUMNTOCOMPUTE:
             brutname = colname+'_brutincidence'
-
             #recompute all incidence table
             currentdf[brutname] = buildbrutIncidence(currentdf,colname)           
             currentdf[colname+'_MMincidence'] = incidenceMovingAverage(currentdf,brutname,MAFACTOR)
             currentdf[colname+'_eMMincidence'] = incidenceExpMovingAverage(currentdf,brutname,0.1)
-        #
+        
+        # testmode write file in other name to compare with old file.
         if not testmode :filepath = WORKDATAFOLDER+'/incidence_'+paysname+'_Table.csv'
         else :filepath = WORKDATAFOLDER+'/incidence_'+paysname+'_Tabletest.csv'
         
+        # saving to pdf
         currentdf.to_csv(filepath,index=False)
         return True       
-        
+
     else : 
         print('no recent data detected for {}, incidence update cancelled'.format(paysname))
         return False

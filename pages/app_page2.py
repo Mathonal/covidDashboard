@@ -32,11 +32,12 @@ def getIncPerMillion(countrynamelist,dataScope='date'):
     seriesdict = {}
     for name in countrynamelist :
         # load country data
-        updateIncidenceTable(name)
-        allframe = loadCSVData(name,'Inc')
+        # updateIncidenceTable(name) cutting update for faster display 
+        allframe = loadCSVData(name,'Inc') 
+        # need to add a error treatment if file not found
         seriesdict[name] = allframe['Confirmed_eMMincidence']
+        
         # transformation
-
         #starting with absolute value of inc
         if dataScope == 'date' :
             testserie = seriesdict[name]#.loc[(seriesdict[name]>100)].reset_index(drop=True)

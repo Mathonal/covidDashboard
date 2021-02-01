@@ -51,7 +51,24 @@ def get_menu():
 def LabeledSelect(label, **kwargs):
     return dbc.FormGroup([dbc.Label(label), dbc.Select(**kwargs)])
 
+
+def refreshdatesliderange(df):
+    # 3 - renew slide range to DF size
+    slidemax = df.shape[0]-1
+
+    # define fixed intervals
+    dictstep = round(slidemax/5)
+
+    #first values of dataframe range
+    slidemarksdict = {i: '{}'.format(df['Date'][i]) for i in range(
+        0,slidemax,dictstep)}
+    #last val of DATAFRAME : mandatory
+    slidemarksdict[slidemax] = '{}'.format(df['Date'][slidemax])
+    
+    return slidemarksdict,slidemax
+
 # ====== COMPUTE FUNCTIONS ==========
+
 def get_affecteddeaths_carddata(figlist):
     #dfpop = pd.read_csv(DATA_PATH.joinpath("population_2019.csv"),index_col=0)
     dfpop = pd.read_csv("workdata/population_2019.csv",index_col=0)
@@ -61,7 +78,8 @@ def get_affecteddeaths_carddata(figlist):
     lastdeath = 0
     totalpop = 0 
     for name in figlist :
-        df = verify_priordata(name)
+        #df = verify_priordata(name)
+        df = loadCSVData(name,'Inc')
 
         lastline = df.shape[0]-1
 
@@ -117,12 +135,13 @@ def globaldataupdate(testmode=False):
         lastdfdate = 0
 
     if testmode : lastdfdate = 0
+
     #limited to one global update daily
     if today_object != lastdfdate :
-        print('Executing global data update')
+        print('Executing global data update to date : {}'.format(lastdfdate_str))
+        threading.Thread(target=update_alldata).start()
         lastdfdate = open(LASTUPDATEFILE, 'w').write(
                 today_object.strftime("%Y-%m-%d"))
-        threading.Thread(target=update_alldata).start()
     else : print('data already updated : {}'.format(lastdfdate_str))
 
 def update_alldata():
@@ -134,7 +153,9 @@ def update_alldata():
     print('beginning global update thread')
     threadslist = []
     for countryname in country_map.keys():
+        # need to call a refresh of raw data from API
         getRawDataToCSV(countryname)
+        # before verifying if differences exists between raw and incidence tables
         updateIncidenceTable(countryname)
     print('global update finished')
 
@@ -144,13 +165,15 @@ def verify_priordata(paysname):
         the incidence file exists for input country
         (function called during callbacks or app init)
     """
-    # force call to api if Raw data not found
-    try:
-        rawdf = loadCSVData(paysname,'Raw')
-    except FileNotFoundError:
-        getRawDataToCSV(paysname)
+        # THIS PART IS ALREADY DONE IN updateIncidenceTable
+        # force call to api if Raw data not found
+        #try:
+        #    rawdf = loadCSVData(paysname,'Raw')
+        #except FileNotFoundError:
+        #    getRawDataToCSV(paysname)
 
     # read or create incidence file from raw file
+    # ONLY UPDATE IF incidence file not found, not if incidence file outdated
     try:
         incdf = loadCSVData(paysname,'Inc')
     except FileNotFoundError:
