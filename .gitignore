@@ -6,3 +6,4 @@ __pycache__/
 # CSV from api and light compute
 raw/
 inc/
+lastupdate.txt
