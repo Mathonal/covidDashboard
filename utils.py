@@ -7,6 +7,8 @@ import dash_html_components as html
 import dash_bootstrap_components as dbc
 import dash_core_components as dcc
 
+import plotly.graph_objs as go
+
 from api_pipeline.api_utils import updateIncidenceTable,getRawDataToCSV,loadCSVData
 from modeling import country_map
 
@@ -99,20 +101,23 @@ def get_affecteddeaths_carddata(figlist):
     cards = [
     dbc.Card(
     [
+        html.H4("Population touchée", className="card-text"),
         #html.H2(f"{contaminationrate*100:.2f}% of {totalpop:.2f} millions", className="card-title",id='infected-rate'),
         #html.P(f"Population affected ; Total : {affectedvalue} (+{lastaffected} on last day)", className="card-text"),
         html.H2(f"{contaminationrate*100:.2f}% sur {totalpop:.2f} millions", className="card-title",id='infected-rate'),
-        html.P(f"Population touchée ; Total : {affectedvalue} (+{lastaffected} hier)", className="card-text"),
+        html.P(f" Total : {affectedvalue} (+{lastaffected} hier)", className="card-text"),
+        #html.P(f"Population touchée ; Total : {affectedvalue} (+{lastaffected} hier)", className="card-text"),
     ],
     body=True,
     color="light",
     ),
     dbc.Card(
         [
+            html.H4("Mortalité des cas confirmés", className="card-text"),
             #html.H2(f"{mortalityrate*100:.2f}% of {affectedvalue/1000000:.2f} millions", className="card-title",id='mortality-rate'),
             #html.P(f"Mortality rate of affected ; Total : {deathvalue} (+{lastdeath} on last day)", className="card-text"),
             html.H2(f"{mortalityrate*100:.2f}% sur {affectedvalue/1000000:.2f} millions", className="card-title",id='mortality-rate'),
-            html.P(f"Mortalité des cas confirmés ; Total : {deathvalue} (+{lastdeath} hier)", className="card-text"),
+            html.P(f"Total : {deathvalue} (+{lastdeath} hier)", className="card-text"),
         ],
         body=True,
         color="dark",
@@ -122,6 +127,69 @@ def get_affecteddeaths_carddata(figlist):
     ]
 
     return cards
+
+def graphcountryperf(countrylist):
+    dfpop = pd.read_csv("workdata/population_2019.csv",index_col=0)
+    perflist = []
+    indexlist = []
+
+    for name in countrylist :
+        df = loadCSVData(name,'Inc')
+        lastline = df.shape[0]-1
+
+        indexlist.append(name)
+        perflist.append([df['Confirmed'][lastline],
+            df['Deaths'][lastline],
+            float(dfpop['population'][name])])
+
+    perfdf = pd.DataFrame(data=perflist,columns=['Confirmed','Deaths','population']
+        ,index=indexlist)
+
+    # LINEAR REGRESSION
+    modelreg = np.polyfit(perfdf['Confirmed'], perfdf['Deaths'], 1)
+    predict = np.poly1d(modelreg)
+    x=range(0,max(perfdf['Confirmed']),50000)
+    y=predict(x)
+
+    graphperf = go.Figure(
+        data=[
+            #go.Scatter(x=wdf_filt.index,y=wdf_filt[countryname],
+            go.Scatter(x=perfdf['Confirmed'],
+                y=perfdf['Deaths'],
+                marker=dict(
+                    size=perfdf['population'],
+                    sizeref=2.*max(perfdf['population'])/(10.**2),
+                    sizemin=5                   
+                    ),
+                mode='markers',
+                text=perfdf.index),
+            go.Scatter(x=list(x),y=list(y))
+            ],
+        layout=dict(
+            #title="Comparative incidence Graph",
+            title="Comparaison Nombre décès / Nombre de cas par pays",
+            xaxis={
+                "autorange": True,
+                "showline": True,
+                "title": "Nombre de cas",
+                #"title": "days since first incidence > 100/day",
+                "type": "log",
+                         },
+            yaxis={
+                 "autorange": True,
+                 "showgrid": True,
+                 "showline": True,
+                 #"title": "new daily affected / million population",
+                 "title": "Nombre de décès",
+                 "type": "log",
+                 "zeroline": False,
+                 }
+            )
+    )
+
+    graphperf.update_layout(showlegend=False)
+    return dcc.Graph(figure=graphperf)
+
 
 # ====== PIPELINE EXEC =============
 def globaldataupdate(testmode=False):
