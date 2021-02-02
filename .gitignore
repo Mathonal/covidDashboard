@@ -4,6 +4,8 @@ __pycache__/
 *.py[cod]
 .env
 # CSV from api and light compute
-raw/
-inc/
+*Table.csv
+#workdata/raw/*.csv
+#workdata/inc/*.csv
+trash/
 lastupdate.txt

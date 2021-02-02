@@ -32,4 +32,7 @@ def display_page(pathname):
 
 # =========================================
 if __name__ == "__main__":
-    app.run_server(debug=True,host='0.0.0.0')
+    #app.run_server(debug=True, host='0.0.0.0',)
+    app.run_server(host='0.0.0.0',debug=True)
+    # reloader option prevent flask to intialize twice in debugg mode use_reloader=False,
+    # option debug or use reloader can't seem to to any differences ...

@@ -26,37 +26,56 @@ def getRawDataToCSV(paysname):
         write a CSV file in input folder : 
             workdatafolder+'/raw_'+paysname+'_ALLTable.csv'
     """ 
-    trycount = 0
-    # try request loop
-    while trycount < 5 :
-        try :
-            rawdf=pd.DataFrame(getPandaFrameForCountry(paysname))
-        except :
-            print('getRawDataToCSV : API Error for {}. loop {}'
-                .format(paysname,str(trycount)))
-            time.sleep(1)
-        else : break
-        finally : trycount +=1
-
-    # drop useless column
-    rawdf.drop(rawdf.columns.difference(COLUMNTOKEEP), axis=1,inplace=True)
-    # correct date
-    correctDateOnPandaFrame(rawdf)
-    # write csv with raw files
-    #filepath = WORKDATAFOLDER+'/raw_'+paysname+'_ALLTable.csv'
-    filepath = DATA_PATH.joinpath(RAWFOLDER,'raw_'+paysname+'_ALLTable.csv')
-
-    rawdf.to_csv(filepath,index=False)
+    # request loop integrated in getPandaFrameForCountry function
+    # if error, it's a big one, just skip this country
+    try :
+        rawdf=pd.DataFrame(getPandaFrameForCountry(paysname))
+    except :
+        print('getRawDataToCSV : API Error for {}. 5 loop failure'
+                .format(paysname))
+        return False
+    else :
+        # pre-treat DF 
+        # 1 drop useless column
+        rawdf.drop(rawdf.columns.difference(COLUMNTOKEEP), axis=1,inplace=True)
+        # correct date
+        correctDateOnPandaFrame(rawdf)
+        # 3 write csv with raw files
+        #filepath = WORKDATAFOLDER+'/raw_'+paysname+'_ALLTable.csv'
+        filepath = DATA_PATH.joinpath(RAWFOLDER,'raw_'+paysname+'_ALLTable.csv')
+        rawdf.to_csv(filepath,index=False)
+        return True
 
 def getPandaFrameForCountry(CountryName):
     """
         return full data off covid19api for input CountryName
         JSON format to transform in dataframe
+        response.status_code : 200 : ok
+        503 : Service Unavailable (wait a bit)
+        502 : bad gateway (same as service overloaded)
+        429 : too many request (wait a bit)
+
+        if error at response : TRIES 5 times with 4 second interruption
     """
+    # API config
     url = "https://api.covid19api.com/total/country/"+CountryName
     payload = {}
-    headers= {}
-    response = requests.request("GET", url, headers=headers, data = payload)
+    headers= {} 
+
+    # request loop config
+    Rcode = 0
+    trycount = 0
+    while Rcode != 200 and trycount < 5:
+        response = requests.request("GET", url, headers=headers, data = payload)
+        Rcode = response.status_code
+        if Rcode != 200 :
+            try : message = response.json()
+            except : message = ''
+            print(Rcode,message)
+            time.sleep(4)  
+        else : print('requests {} for {}'.format(Rcode,CountryName))
+        trycount += 1
+
     return response.json()
 
 def correctDateOnPandaFrame(pandasdataframe):
@@ -149,13 +168,16 @@ def updateIncidenceTable(paysname,testmode=False):
     """
     print('launch updateIncidenceTable')
     #loadexisting files
+
+    # this try is not suppose to fail, as function launch at the condition
+    # that an execution of getRawDataToCSV goes well
     try:
         rawdf = loadCSVData(paysname,'Raw')
     except FileNotFoundError:
         getRawDataToCSV(paysname)
         rawdf = loadCSVData(paysname,'Raw')
         # HERE IS an EXECUTION PROBLEM if raw data fails, no backup
-        # there is a loop of requests in getrawdata function (3-5x) 
+        # there is a loop of requests in getrawdata function (5x) 
 
     try:
         incdf = loadCSVData(paysname,'Inc')

@@ -61,7 +61,6 @@ def get_menu():
 def LabeledSelect(label, **kwargs):
     return dbc.FormGroup([dbc.Label(label), dbc.Select(**kwargs)])
 
-
 def refreshdatesliderange(df):
     # 3 - renew slide range to DF size
     slidemax = df.shape[0]-1
@@ -147,7 +146,7 @@ def graphcountryperf(countrylist):
     for name in countrylist :
         try: df = loadCSVData(name,'Inc')
         except : continue
-        
+
         lastline = df.shape[0]-1
 
         indexlist.append(name)
@@ -159,24 +158,28 @@ def graphcountryperf(countrylist):
         ,index=indexlist)
 
     # LINEAR REGRESSION
-    modelreg = np.polyfit(perfdf['Confirmed'], perfdf['Deaths'], 1)
+    X = perfdf['Confirmed']/perfdf['population']
+    Y = perfdf['Deaths']/perfdf['population']
+    modelreg = np.polyfit(X, Y, 1)
+    print('model on {} country : {}'.format(len(indexlist),modelreg))
     predict = np.poly1d(modelreg)
-    x=range(0,max(perfdf['Confirmed']),50000)
-    y=predict(x)
+    # Line trace 
+    stepline = round(max(X)/100)
+    linex=range(0,round(max(X)),stepline)
+    liney=predict(linex)
 
     graphperf = go.Figure(
         data=[
             #go.Scatter(x=wdf_filt.index,y=wdf_filt[countryname],
-            go.Scatter(x=perfdf['Confirmed'],
-                y=perfdf['Deaths'],
+            go.Scatter(x=X,y=Y,
                 marker=dict(
                     size=perfdf['population'],
-                    sizeref=2.*max(perfdf['population'])/(10.**2),
-                    sizemin=5                   
+                    sizeref=2.*max(perfdf['population'])/(12.**2),
+                    sizemin=4                   
                     ),
                 mode='markers',
                 text=perfdf.index),
-            go.Scatter(x=list(x),y=list(y))
+            go.Scatter(x=list(linex),y=list(liney))
             ],
         layout=dict(
             #title="Comparative incidence Graph",
@@ -184,7 +187,7 @@ def graphcountryperf(countrylist):
             xaxis={
                 "autorange": True,
                 "showline": True,
-                "title": "Nombre de cas",
+                "title": "Nombre de cas / million",
                 #"title": "days since first incidence > 100/day",
                 "type": "log",
                          },
@@ -193,8 +196,8 @@ def graphcountryperf(countrylist):
                  "showgrid": True,
                  "showline": True,
                  #"title": "new daily affected / million population",
-                 "title": "Nombre de décès",
-                 "type": "log",
+                 "title": "Nombre de décès / million",
+                 #"type": "log",
                  "zeroline": False,
                  }
             )
@@ -217,6 +220,7 @@ def getIncPerMillion(countrynamelist,dataScope='date'):
         try :
             allframe = loadCSVData(name,'Inc')
         except:
+            print('cannot open inc {}'.format(name))
             updatedcountrylist.remove(name)
             continue
         # need to add a error treatment if file not found
@@ -240,7 +244,9 @@ def getIncPerMillion(countrynamelist,dataScope='date'):
         else : testdf = pd.DataFrame(testserie.tolist(),columns=[name])
         listoflist.append(testdf)
     
-    comparativeinc= pd.concat(listoflist, axis=1)
+    if listoflist == []:
+        comparativeinc = None
+    else : comparativeinc= pd.concat(listoflist, axis=1)
 
     return comparativeinc,updatedcountrylist
 # ====== PIPELINE EXEC =============
@@ -267,8 +273,7 @@ def globaldataupdate(testmode=False):
     if today_object != lastdfdate :
         print('Executing global data update to date : {}'.format(lastdfdate_str))
         threading.Thread(target=update_alldata).start()
-        lastdfdate = open(LASTUPDATEFILE, 'w').write(
-                today_object.strftime("%Y-%m-%d"))
+
     else : print('data already updated : {}'.format(lastdfdate_str))
 
 def update_alldata():
@@ -281,12 +286,18 @@ def update_alldata():
     threadslist = []
     for countryname in country_map.keys():
         # need to call a refresh of raw data from API
-        getRawDataToCSV(countryname)
-        # before verifying if differences exists between raw and incidence tables
-        updateIncidenceTable(countryname)
+        if getRawDataToCSV(countryname) : 
+            # before verifying if differences exists between raw and incidence tables
+            updateIncidenceTable(countryname)
+        else : print('ERROR in update_alldata : RAW for {} not updated'
+            .format(countryname))
+
+    today_object = datetime.date.today()
+    lastdfdate = open(LASTUPDATEFILE, 'w').write(
+                today_object.strftime("%Y-%m-%d"))
     print('global update finished')
 
-def verify_priordata(paysname):
+def verify_priordata(paysname): # NOT USED ANYMORE
     """
         Function supposed to certify that 
         the incidence file exists for input country

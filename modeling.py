@@ -29,25 +29,58 @@ continent_map = {
         "Ireland":"Ireland",
         "Italy":"Italie",
         "Netherlands":"Pays-bas",
+        "Poland":"Pologne",
+        "Ukraine":"Ukraine",
         "United Kingdom":"Royaume-unis",
         "Sweden":"Suède",
         "Switzerland":"Suisse",
+        "Turkey":"Turquie",
     },
     'America' : { 
         "United States of America":"Etats-unis",
         "Mexico" : "Mexique",
-        #"Canada" : "Canada", bugg request return empty
+        "Canada" : "Canada", # bugg request return empty
         "Brazil":"Brazil",
+        "Colombia":"Colombia",
+        "Argentina":"Argentina",
+        "Peru":"Perou",
+
     },
-    'Asia' : { 
-        "Russian Federation":"Russie",
+    'Asia' : {
+        "Afghanistan":"Afghanistan",
         "India":"Inde",
+        "Indonesia":"Indonésie",
+        "Bangladesh":"Bangladesh",
         "China":"Chine",
+        "Japan":"Japon",
+        "Myanmar":"Byrmanie",
+        "Pakistan":"Pakistan",
+        "Philippines":"Philippines",
+        "Russian Federation":"Russie",
+        "Thailand":"Thailande",
+        "Uzbekistan":"Uzbekistan",
+        "Malaysia":"Malaisie",
+        "Nepal":"Nepal",
+
+
     },
     'Africa' : {
+        "Algeria":"Algeria",
+        "Iraq":"Iraq",
         "South Africa" : "Afrique du sud",
+        "Morocco":"Maroc",
         "Nigeria":"Nigeria",
-        "Ethiopia":"Ethiopia"
+        "Ethiopia":"Ethiopia",
+        "Kenya":"Kenya",
+        "Sudan":"Sudan",
+        "Saudi Arabia":"Arabie Saoudite",
+        "Uganda":"Uganda",
+        "Angola":"Angola",
+        "Mozambique":"Mozambique",
+        "Ghana":"Ghana",
+        "Madagascar":"Madagascar",
+        "Cameroon":"Cameroon"
+
     },
 }
 

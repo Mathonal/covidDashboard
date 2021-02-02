@@ -27,10 +27,10 @@ import pathlib
 PATH = pathlib.Path(__file__).parent
 DATA_PATH = PATH.joinpath("../workdata").resolve()
 
-wdf,clist = getIncPerMillion(list(country_map.keys()),'date')
+
 
 def appcontent(app):
-  
+    wdf,clist = getIncPerMillion(list(country_map.keys()),'date')
     # ================== LAYOUT=========================
     groupDist = ['Continent','World']#,'Country']
 
@@ -92,8 +92,9 @@ def appcontent(app):
             dbc.Row([dbc.Col(card) for card in worldcards]), # 1 row with Xcard in column
             html.Br(),
             dbc.Row(dbc.Col(dbc.Card([Worldperfo,
-                html.P("Note d'interprétation : les pays en dessous de la courbe ont \
-                    une meilleure gestion de leur crise (mortalité moins élevée)"),
+                html.P("Note d'interprétation : les pays à droite du graphique sont \
+                    les plus touchés par l'épidémie ; /<br> les pays en dessous de la courbe ont \
+                    une meilleure gestion de leur crise (mortalité des infectés moins élevée) OU ont un comptage incomplet"),
                 ]))),
 
             html.Hr(), # Separation line
