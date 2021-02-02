@@ -6,7 +6,7 @@ from dash.dependencies import Input, Output
 from app import app
 from pages import (
     app_countrydetails,
-    #app_globaloverview,
+    app_groupview,
     app_scorecard,
 )
 
@@ -34,10 +34,12 @@ app.layout = html.Div(
 # Update page from url
 @app.callback(Output("page-content", "children"), [Input("url", "pathname")])
 def display_page(pathname):
-    if pathname == "/generic-per-country":
+    if pathname == "/details-per-country":
         return app_countrydetails.appcontent(app) 
     elif pathname == "/overview" or pathname == "/": 
         return app_scorecard.appcontent(app)
+    elif pathname == "/groupview" : 
+        return app_groupview.appcontent(app)
     else : return 'ERROR 404'
 
 # =========================================

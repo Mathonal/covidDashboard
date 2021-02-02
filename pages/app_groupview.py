@@ -15,7 +15,8 @@ from utils import Header,LabeledSelect
 from utils import (
     get_affecteddeaths_carddata,
     graphcountryperf,
-    getIncPerMillion
+    getIncPerMillion,
+    comparativeIncidenceFigure,
     )
 from modeling import col_map,country_map,continent_map
 
@@ -24,10 +25,10 @@ import pathlib
 PATH = pathlib.Path(__file__).parent
 DATA_PATH = PATH.joinpath("../workdata").resolve()
 
-wdf = getIncPerMillion(list(country_map.keys()),'date')
+
 
 def appcontent(app):
-  
+    wdf,clist = getIncPerMillion(list(country_map.keys()),'date')
     # ================== LAYOUT=========================
     groupDist = ['Continent','World']#,'Country']
 
@@ -61,15 +62,15 @@ def appcontent(app):
 
     # Card components
     cards = [
-        dbc.Card(id='globalaffected_card'),
-        dbc.Card(id='globalmortality_card'),
+        dbc.Card(id='groupaffected_card'),
+        dbc.Card(id='groupmortality_card'),
         #dbc.Card(id='mortality_card2')
         ] 
 
     # Graph components
     graphs = [
         [
-            dcc.Graph(id="graph-comparativeInc"),
+            dcc.Graph(id="graph-groupcomparativeInc"),
         ],
     ]
 
@@ -79,16 +80,14 @@ def appcontent(app):
         [
             Header(app),
             html.Hr(), # Separation line
-            dbc.Row([dbc.Col(card) for card in cards]), # 1 row with Xcard in column
-            html.Br(),
-
+            html.H4("Selection"),
             #GLOBAL SELECTORS : 1 row with x label selectors, 1 row with date
             dbc.Row(dbc.Col(labelselectors[0])),
-            html.Br(),
             dbc.Row(dbc.Col(labelselectors[1])),
             html.Br(),
+            dbc.Row([dbc.Col(card) for card in cards]), # 1 row with Xcard in column
+            html.Br(),
             dbc.Col(dbc.Col(absrangeselector)),
-
             #dbc.Row([dbc.Col(graph) for graph in graphs]),
             dbc.Row(dbc.Col(dbc.Card(graphs[0]))),
             html.Br(),
@@ -129,7 +128,7 @@ def update_groupselect(grouptype):
 
 # GRAPHES 
 @app.callback(
-    Output("graph-comparativeInc", "figure"),
+    Output("graph-groupcomparativeInc", "figure"),
     [
     Input("abs-slider", "value"),
     Input("check-grouplist", "value"),
@@ -137,45 +136,19 @@ def update_groupselect(grouptype):
 )
 def update_comparative_incidence_figures(abscisserange,countrylist):
     # Loading default Dataframe and compute data
-    wdf = getIncPerMillion(list(country_map.keys()),'date')
     figlist = getFinalCountryList(countrylist)
+    #wdf,figlist = getIncPerMillion(list(country_map.keys()),'date')
+    wdf,figlist = getIncPerMillion(figlist,'date')
 
     # 4 - Filter dosplay based on chosen values
     # DATE RANGE
     wdf_filt = wdf.iloc[abscisserange[0]:abscisserange[1]]
     # 5 - draw graphe
-    # comparative incidence graphe
-    coef_fig = go.Figure(
-        data=[
-            #go.Scatter(x=wdf_filt.index,y=wdf_filt[countryname],
-            go.Scatter(x=wdf_filt.index,y=wdf_filt[countryname],
-                name=countryname,mode='lines') for countryname in figlist],
-        layout=dict(
-            #title="Comparative incidence Graph",
-            title="Graphe d'incidence comparative des cas confirmés par million de personnes",
-            xaxis={
-                "autorange": True,
-                "showline": True,
-                #"title": "days since first incidence > 100/day",
-                #"title": "days since first incidence > 100/day",
-                #"type": "category",
-                         },
-            yaxis={
-                 "autorange": True,
-                 "showgrid": True,
-                 "showline": True,
-                 #"title": "new daily affected / million population",
-                 "title": "Nouveaux cas quotidien par million d'habitants",
-                 "type": "linear",
-                 "zeroline": False,
-                 }
-            )
-    )
-    return coef_fig
+    title="Graphe d'incidence comparative des cas confirmés par million de personnes"
+    return comparativeIncidenceFigure(wdf_filt,figlist,title)
 
 # CARDS
 def getFinalCountryList(inputlist):
-    #print("inputlist : {}".format(inputlist))
     finallist = []
     for elem in continent_map.keys():
         if elem in inputlist :
@@ -183,16 +156,15 @@ def getFinalCountryList(inputlist):
                 finallist.append(x)
 
     if finallist == [] : finallist = inputlist
-    #print("FIGLIST : {}".format(finallist))
     return finallist
 
 @app.callback(
-    [Output("globalaffected_card", "children"),
-    Output("globalmortality_card", "children")],
+    [Output("groupaffected_card", "children"),
+    Output("groupmortality_card", "children")],
     Input("check-grouplist", "value"),
     )
 def computeCardsComponents(group_val):
-    print('updating global cards')
+    print('updating group cards')
     figlist = getFinalCountryList(group_val)
     cardlist = get_affecteddeaths_carddata(figlist)
 

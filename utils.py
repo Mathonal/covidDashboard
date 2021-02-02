@@ -45,8 +45,13 @@ def get_menu():
                 className="tab first",
             )),
             dbc.Card(dbc.CardLink(
+                "Vue par Continent",
+                href="/groupview",
+                className="tab",
+            )),
+            dbc.Card(dbc.CardLink(
                 "Details par pays",
-                href="/generic-per-country",
+                href="/details-per-country",
                 className="tab",
             )),
             # dbc.Card(dbc.CardLink(
@@ -252,6 +257,45 @@ def getIncPerMillion(countrynamelist,dataScope='date'):
     else : comparativeinc= pd.concat(listoflist, axis=1)
 
     return comparativeinc,updatedcountrylist
+
+def comparativeIncidenceFigure(wdf_filt,countrylist,title):
+    # Loading default Dataframe and compute data
+    #figlist = getFinalCountryList(countrylist)
+    #wdf,figlist = getIncPerMillion(list(country_map.keys()),'date')
+    #wdf,figlist = getIncPerMillion(figlist,'date')
+
+    # 4 - Filter dosplay based on chosen values
+    # DATE RANGE
+    #wdf_filt = wdf.iloc[abscisserange[0]:abscisserange[1]]
+    # 5 - draw graphe
+    # comparative incidence graphe
+    figureToPrint = go.Figure(
+        data=[
+            go.Scatter(x=wdf_filt.index,y=wdf_filt[countryname],
+                name=countryname,mode='lines') for countryname in countrylist],
+        layout=dict(
+            #title="Comparative incidence Graph",
+            title=title,
+            xaxis={
+                "autorange": True,
+                "showline": True,
+                #"title": "days since first incidence > 100/day",
+                #"title": "days since first incidence > 100/day",
+                #"type": "category",
+                         },
+            yaxis={
+                 "autorange": True,
+                 "showgrid": True,
+                 "showline": True,
+                 #"title": "new daily affected / million population",
+                 "title": "Nouveaux cas quotidien par million d'habitants",
+                 "type": "linear",
+                 "zeroline": False,
+                 }
+            )
+    )
+    return figureToPrint 
+
 # ====== PIPELINE EXEC =============
 def globaldataupdate(testmode=False):
     """
