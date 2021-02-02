@@ -1,4 +1,4 @@
-import datetime
+from app import app
 import dash
 import dash_bootstrap_components as dbc
 import dash_core_components as dcc
@@ -11,11 +11,8 @@ import plotly.graph_objs as go
 #from sklearn.metrics import accuracy_score
 pd.options.mode.chained_assignment = None
 
-from app import app
-
-from api_pipeline.api_utils import updateIncidenceTable
 from utils import Header,LabeledSelect
-from utils import (loadCSVData,verify_priordata,
+from utils import (
     get_affecteddeaths_carddata,
     graphcountryperf,
     getIncPerMillion
@@ -30,7 +27,26 @@ DATA_PATH = PATH.joinpath("../workdata").resolve()
 
 
 def appcontent(app):
+    # default loading
     wdf,clist = getIncPerMillion(list(country_map.keys()),'date')
+    # ================== FIXED LAYOUT =========================
+
+    # Card components on all data available (world)
+    worldcards = get_affecteddeaths_carddata(
+        list(country_map.keys()))
+
+    Worldperfo = graphcountryperf(list(country_map.keys()))
+
+
+
+
+
+
+
+
+
+
+
     # ================== LAYOUT=========================
     groupDist = ['Continent','World']#,'Country']
 
@@ -61,13 +77,6 @@ def appcontent(app):
         max=wdf.shape[0]-1,
         value=[0, wdf.shape[0]-1]
         )
-
-    # Card components
-    worldcards = get_affecteddeaths_carddata(
-        list(country_map.keys()))
-
-
-    Worldperfo = graphcountryperf(list(country_map.keys()))
 
     cards = [
         dbc.Card(id='globalaffected_card'),
@@ -126,7 +135,6 @@ def appcontent(app):
     Input("select-grouptype", "value")
 )
 def update_groupselect(grouptype):
-    print(grouptype)
     if grouptype == "Continent":
         checkoptions=[
         {"label": 'Europe', "value": 'Europe'},
@@ -196,7 +204,6 @@ def update_comparative_incidence_figures(abscisserange,countrylist):
 
 # CARDS
 def getFinalCountryList(inputlist):
-    #print("inputlist : {}".format(inputlist))
     finallist = []
     for elem in continent_map.keys():
         if elem in inputlist :
@@ -204,7 +211,6 @@ def getFinalCountryList(inputlist):
                 finallist.append(x)
 
     if finallist == [] : finallist = inputlist
-    #print("FIGLIST : {}".format(finallist))
     return finallist
 
 @app.callback(
@@ -213,8 +219,6 @@ def getFinalCountryList(inputlist):
     Input("check-grouplist", "value"),
     )
 def computeCardsComponents(group_val):
-    #df = verify_priordata(country_val)
-    print('updating global cards')
     figlist = getFinalCountryList(group_val)
     cardlist = get_affecteddeaths_carddata(figlist)
 

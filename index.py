@@ -12,7 +12,17 @@ from pages import (
 
 from utils import globaldataupdate
 
+
+import logging
+logging.basicConfig(level=logging.DEBUG,
+ format=' %(threadName)s -- %(levelname)s -- %(message)s')
+# %(processName)s %(asctime)s
+
+
+logging.debug('Start of program')
 # Pre-Update Data at launch (thread)
+# verify data for country list before lauching or restarting app 
+# (after sleep on keroku)
 globaldataupdate()
 
 # =========================================

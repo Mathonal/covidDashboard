@@ -1,4 +1,4 @@
-import datetime
+from app import app
 import dash
 import dash_bootstrap_components as dbc
 import dash_core_components as dcc
@@ -11,11 +11,8 @@ import plotly.graph_objs as go
 #from sklearn.metrics import accuracy_score
 pd.options.mode.chained_assignment = None
 
-from app import app
-
-from api_pipeline.api_utils import updateIncidenceTable
 from utils import Header,LabeledSelect
-from utils import (loadCSVData,verify_priordata,
+from utils import (
     get_affecteddeaths_carddata,
     graphcountryperf,
     getIncPerMillion
@@ -195,7 +192,6 @@ def getFinalCountryList(inputlist):
     Input("check-grouplist", "value"),
     )
 def computeCardsComponents(group_val):
-    #df = verify_priordata(country_val)
     print('updating global cards')
     figlist = getFinalCountryList(group_val)
     cardlist = get_affecteddeaths_carddata(figlist)

@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import datetime
 import threading
+import logging
 
 import dash_html_components as html
 import dash_bootstrap_components as dbc
@@ -161,8 +162,10 @@ def graphcountryperf(countrylist):
     X = perfdf['Confirmed']/perfdf['population']
     Y = perfdf['Deaths']/perfdf['population']
     modelreg = np.polyfit(X, Y, 1)
-    print('model on {} country : {}'.format(len(indexlist),modelreg))
     predict = np.poly1d(modelreg)
+    
+    logging.info('regression model on {} country : {}'.format(len(indexlist),modelreg))
+
     # Line trace 
     stepline = round(max(X)/100)
     linex=range(0,round(max(X)),stepline)
@@ -220,7 +223,7 @@ def getIncPerMillion(countrynamelist,dataScope='date'):
         try :
             allframe = loadCSVData(name,'Inc')
         except:
-            print('cannot open inc {}'.format(name))
+            logging.error('cannot open inc for {} : country ignored'.format(name))
             updatedcountrylist.remove(name)
             continue
         # need to add a error treatment if file not found
@@ -257,13 +260,14 @@ def globaldataupdate(testmode=False):
             - date written in last update file is outdated
             - if testmode is true 
     """
-    print('Entering global update verification')
+    logging.debug('Entering global update verification')
     #datetime verification
     today_object = datetime.date.today()
     try:
         lastdfdate_str = list(open(LASTUPDATEFILE, 'r'))[0]
         lastdfdate = datetime.datetime.strptime(lastdfdate_str, '%Y-%m-%d').date()
     except:
+        logging.warning('No last update found : will force data sync')
         lastdfdate_str = 0
         lastdfdate = 0
 
@@ -271,10 +275,10 @@ def globaldataupdate(testmode=False):
 
     #limited to one global update daily
     if today_object != lastdfdate :
-        print('Executing global data update to date : {}'.format(lastdfdate_str))
+        logging.warning('Executing global data update since {}'.format(lastdfdate_str))
         threading.Thread(target=update_alldata).start()
 
-    else : print('data already updated : {}'.format(lastdfdate_str))
+    else : logging.info('global data already up to date : {}'.format(lastdfdate_str))
 
 def update_alldata():
     """
@@ -282,20 +286,24 @@ def update_alldata():
         loop supposed to be run in THREAD because 
         can be a bit long due to requesting API site 
     """
-    print('beginning global update thread')
+    logging.info('beginning global update thread')
     threadslist = []
+    ignorelist = []
     for countryname in country_map.keys():
         # need to call a refresh of raw data from API
         if getRawDataToCSV(countryname) : 
             # before verifying if differences exists between raw and incidence tables
             updateIncidenceTable(countryname)
-        else : print('ERROR in update_alldata : RAW for {} not updated'
+        else : 
+            logging.error('update_alldata : RAW for {} not updated'
             .format(countryname))
+            ignorelist.append(countryname)
 
     today_object = datetime.date.today()
     lastdfdate = open(LASTUPDATEFILE, 'w').write(
                 today_object.strftime("%Y-%m-%d"))
-    print('global update finished')
+    logging.info('global update done with {} exceptions : {}'
+        .format(len(ignorelist),ignorelist))
 
 def verify_priordata(paysname): # NOT USED ANYMORE
     """

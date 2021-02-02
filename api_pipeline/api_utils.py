@@ -4,6 +4,7 @@ import pandas as pd
 from datetime import datetime
 import time
 import os
+import logging
 
 #External param
 from api_config import (
@@ -19,20 +20,20 @@ DATA_PATH = PATH.joinpath("../",WORKDATAFOLDER).resolve()
 #===========================================
 # EXTRACTION
 #===========================================
-def getRawDataToCSV(paysname):
+def getRawDataToCSV(countryname):
     """
         get raw data from COVIDAPI for input country
         delete useless column
         write a CSV file in input folder : 
-            workdatafolder+'/raw_'+paysname+'_ALLTable.csv'
+            workdatafolder+'/raw_'+countryname+'_ALLTable.csv'
     """ 
     # request loop integrated in getPandaFrameForCountry function
     # if error, it's a big one, just skip this country
     try :
-        rawdf=pd.DataFrame(getPandaFrameForCountry(paysname))
+        rawdf=pd.DataFrame(getPandaFrameForCountry(countryname))
     except :
-        print('getRawDataToCSV : API Error for {}. 5 loop failure'
-                .format(paysname))
+        logging.error('getRawDataToCSV : API Error for {}. 5 loop failure'
+            .format(countryname))
         return False
     else :
         # pre-treat DF 
@@ -41,14 +42,14 @@ def getRawDataToCSV(paysname):
         # correct date
         correctDateOnPandaFrame(rawdf)
         # 3 write csv with raw files
-        #filepath = WORKDATAFOLDER+'/raw_'+paysname+'_ALLTable.csv'
-        filepath = DATA_PATH.joinpath(RAWFOLDER,'raw_'+paysname+'_ALLTable.csv')
+        filepath = DATA_PATH.joinpath(RAWFOLDER,'raw_'+countryname+'_ALLTable.csv')
         rawdf.to_csv(filepath,index=False)
+        logging.info('written raw CSV for {} at {}'.format(countryname,filepath))
         return True
 
-def getPandaFrameForCountry(CountryName):
+def getPandaFrameForCountry(countryname):
     """
-        return full data off covid19api for input CountryName
+        return full data off covid19api for input countryname
         JSON format to transform in dataframe
         response.status_code : 200 : ok
         503 : Service Unavailable (wait a bit)
@@ -58,10 +59,9 @@ def getPandaFrameForCountry(CountryName):
         if error at response : TRIES 5 times with 4 second interruption
     """
     # API config
-    url = "https://api.covid19api.com/total/country/"+CountryName
+    url = "https://api.covid19api.com/total/country/"+countryname
     payload = {}
     headers= {} 
-
     # request loop config
     Rcode = 0
     trycount = 0
@@ -71,11 +71,12 @@ def getPandaFrameForCountry(CountryName):
         if Rcode != 200 :
             try : message = response.json()
             except : message = ''
-            print(Rcode,message)
+            
+            logging.warning('[{}] request code for {} : {}'
+               .format(Rcode,countryname,message))
             time.sleep(4)  
-        else : print('requests {} for {}'.format(Rcode,CountryName))
+        else : logging.debug('request OK for {}'.format(Rcode,countryname))
         trycount += 1
-
     return response.json()
 
 def correctDateOnPandaFrame(pandasdataframe):
@@ -112,7 +113,6 @@ def incidenceMovingAverage(rawData,IncColumnName,nbfactor=2):
         return a pandas.Series
     """
     newdf = rawData[[IncColumnName]]
-    #print(newdf.shape[0])
     listval = []
     #Loop Values
     for i in range(0,newdf.shape[0]):
@@ -131,7 +131,6 @@ def incidenceExpMovingAverage(rawData,IncColumnName,alpha=0.1):
         return a pandas.Series
     """    
     newdf = rawData[[IncColumnName]]
-    #print(newdf.shape[0])
     listval = []
     #Loop Values with sum alpha(1-alpha)^n * Xn
     for i in range(0,newdf.shape[0]):
@@ -139,48 +138,48 @@ def incidenceExpMovingAverage(rawData,IncColumnName,alpha=0.1):
         curval = pd.Series([newdf[IncColumnName][j]*(alpha*math.pow((1-alpha),i-j)) 
                                 for j in range(0,i+1)]).sum()   
         listval.append(round(curval,2))
-        #print(i,round(curval,2))
     return pd.Series(listval)
 
 #===========================================
 # UPDATE INCIDENCE CSV
 #===========================================
 
-def loadCSVData(paysname,Datatype):
+def loadCSVData(countryname,Datatype):
     if Datatype == 'Raw':
-        #filepath = WORKDATAFOLDER+'/raw_'+paysname+'_ALLTable.csv'
-        filepath = DATA_PATH.joinpath(RAWFOLDER,'raw_'+paysname+'_ALLTable.csv')
+        #filepath = WORKDATAFOLDER+'/raw_'+countryname+'_ALLTable.csv'
+        filepath = DATA_PATH.joinpath(RAWFOLDER,'raw_'+countryname+'_ALLTable.csv')
     elif Datatype == 'Inc':
-        #filepath = WORKDATAFOLDER+'/incidence_'+paysname+'_Table.csv'
-        filepath = DATA_PATH.joinpath(INCFOLDER,'incidence_'+paysname+'_Table.csv')
+        #filepath = WORKDATAFOLDER+'/incidence_'+countryname+'_Table.csv'
+        filepath = DATA_PATH.joinpath(INCFOLDER,'incidence_'+countryname+'_Table.csv')
     try:
         paysdf = pd.read_csv(filepath)
     except:
-        print('ERROR : file not found {}'.format(filepath))
+        logging.debug('{} file for {} not found at : {}'
+            .format(Datatype,countryname,filepath))
         raise FileNotFoundError
     return paysdf
 
-def updateIncidenceTable(paysname,testmode=False):
+def updateIncidenceTable(countryname,testmode=False):
     """
         load Raw table and incidence table, 
         verify if they have the same number of line 
         and complete/update the Incidence table if needed
     """
-    print('launch updateIncidenceTable')
+    logging.info('entering updateIncidenceTable for {}'.format(countryname))
     #loadexisting files
 
     # this try is not suppose to fail, as function launch at the condition
     # that an execution of getRawDataToCSV goes well
     try:
-        rawdf = loadCSVData(paysname,'Raw')
+        rawdf = loadCSVData(countryname,'Raw')
     except FileNotFoundError:
-        getRawDataToCSV(paysname)
-        rawdf = loadCSVData(paysname,'Raw')
+        getRawDataToCSV(countryname)
+        rawdf = loadCSVData(countryname,'Raw')
         # HERE IS an EXECUTION PROBLEM if raw data fails, no backup
         # there is a loop of requests in getrawdata function (5x) 
 
     try:
-        incdf = loadCSVData(paysname,'Inc')
+        incdf = loadCSVData(countryname,'Inc')
         incdfsize = incdf.shape[0]
     except FileNotFoundError:
         incdfsize = 0
@@ -188,8 +187,8 @@ def updateIncidenceTable(paysname,testmode=False):
     # comparing nb of lines
     datadelta = rawdf.shape[0]-incdfsize
     if datadelta > 0: # new lines to add
-        print('new data detected for {} : {} more lines'
-            .format(paysname,datadelta))
+        logging.info('new data detected for {} : {} more lines'
+            .format(countryname,datadelta))
         # add new raw data to Incidence DF
         startindex = max(0,incdfsize)
         deltadf = rawdf.loc[startindex:]
@@ -206,14 +205,14 @@ def updateIncidenceTable(paysname,testmode=False):
         
         # testmode write file in other name to compare with old file.
         if not testmode :
-            #filepath = WORKDATAFOLDER+'/incidence_'+paysname+'_Table.csv'
-            filepath = DATA_PATH.joinpath(INCFOLDER,'incidence_'+paysname+'_Table.csv')
-        else :filepath = WORKDATAFOLDER+'/incidence_'+paysname+'_Tabletest.csv'
+            #filepath = WORKDATAFOLDER+'/incidence_'+countryname+'_Table.csv'
+            filepath = DATA_PATH.joinpath(INCFOLDER,'incidence_'+countryname+'_Table.csv')
+        else :filepath = WORKDATAFOLDER+'/incidence_'+countryname+'_Tabletest.csv'
         
         # saving to pdf
         currentdf.to_csv(filepath,index=False)
         return True       
 
     else : 
-        print('no recent data detected for {}, incidence update cancelled'.format(paysname))
+        logging.info(', incidence update skipped for {} : no recent data detected '.format(countryname))
         return False

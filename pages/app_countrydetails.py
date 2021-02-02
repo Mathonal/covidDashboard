@@ -1,4 +1,4 @@
-import datetime
+from app import app
 import dash
 import dash_bootstrap_components as dbc
 import dash_core_components as dcc
@@ -8,14 +8,10 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objs as go
 
-#from sklearn.metrics import accuracy_score
 pd.options.mode.chained_assignment = None
 
-from app import app
-
-from api_pipeline.api_utils import updateIncidenceTable
 from utils import Header,LabeledSelect,refreshdatesliderange
-from utils import loadCSVData,update_alldata,verify_priordata,globaldataupdate,get_affecteddeaths_carddata
+from utils import loadCSVData,get_affecteddeaths_carddata
 from modeling import col_map,country_map
 
 # get relative data folder
@@ -25,13 +21,9 @@ DATA_PATH = PATH.joinpath("../workdata").resolve()
 
 #default loading country (first in list)
 DEFAULTCOUNTRY = list(country_map.keys())[0]
-# verify data for country list before lauching or restarting app 
-# (after sleep on keroku)
-# globaldataupdate()
 
 def appcontent(app):
     # Loading default Dataframe and compute data
-    # df = verify_priordata(DEFAULTCOUNTRY)
     df = loadCSVData(DEFAULTCOUNTRY,'Inc')
    
     # ================== LAYOUT=========================
@@ -85,13 +77,14 @@ def appcontent(app):
     # Graph components
     graphs = [
         [
-            dcc.Graph(id="graph-cumul"),
-        ],
-        [
             incidencetypeselector,
             dcc.Graph(id="graph-incidence"),
             
         ],
+        [
+            dcc.Graph(id="graph-cumul"),
+        ],
+
     ]
 
     # LAYOUT STACKING
@@ -131,11 +124,14 @@ def appcontent(app):
     Input("inc-type", "value")]
 )
 def update_figures(country_val, datatype_val, daterange, inctype_val):
+    """
+        Updates cumulative and incidence graphe from cursor selection :
+        - data type
+        - range date
+        - country selection
+        cannot have dateslider VALUE as input AND output
+    """
     # 1 - load country file
-    #filepath = "workdata/incidence_"+country_val+"_Table.csv"
-    #filepath = DATA_PATH.joinpath("incidence_"+country_val+"_Table.csv")
-    #df = pd.read_csv(filepath)
-    #df = verify_priordata(country_val)
     df = loadCSVData(country_val,'Inc')
     
     # missing something to refresh sliderange value if data length is different
@@ -144,7 +140,7 @@ def update_figures(country_val, datatype_val, daterange, inctype_val):
     # 3 refresh sliderange
     slidemarksdict,slidemaxval = refreshdatesliderange(df)
 
-    # 4 - Filter dosplay based on chosen values
+    # 4 - Filter display based on chosen values
     # DATE RANGE
     xdf_filt = df.iloc[daterange[0]:daterange[1]]
     # DATA TYPES
@@ -213,12 +209,11 @@ def update_figures(country_val, datatype_val, daterange, inctype_val):
     Input("select-country", "value"),
     )
 def computeCardsComponents(country_val):
-    #df = verify_priordata(country_val)
+    """
+       Compute Card data for selected country 
+    """
     print('updating global cards')
-    #figlist = getFinalCountryList(group_val)
-
     cardlist = get_affecteddeaths_carddata([country_val])
-
     return cardlist[0],cardlist[1]
 
 # =========================================
