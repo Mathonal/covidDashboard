@@ -32,7 +32,8 @@ def appcontent(app):
             LabeledSelect(
                 id="select-country",
                 options=[{"label": v, "value": k} for k,v in country_map.items()],
-                value=list(country_map.keys())[0],
+                #value=list(country_map.keys())[0],
+                value='France',
                 #label="Filter by Country",
                 label="Filtre par pays",
             ),

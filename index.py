@@ -10,8 +10,7 @@ from pages import (
     app_scorecard,
 )
 
-from utils import globaldataupdate
-
+from api_pipeline.api_utils import globaldataupdate
 
 import logging
 logging.basicConfig(level=logging.DEBUG,

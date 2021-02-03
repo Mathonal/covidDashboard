@@ -48,11 +48,10 @@ def appcontent(app):
     # sort values 
     lastvaldf.sort_values(lastvaldf.columns[0],inplace=True,ascending=False)
     # get first names
-    top10list = list(lastvaldf.index[0:5])
+    top10list = list(lastvaldf.index[0:10])
 
     # 5 - draw graphe
     toptentitle="Graphe des plus fortes incidences actuelles (par million de personnes)"
-
     toptengraph = dcc.Graph(figure=comparativeIncidenceFigure(wdf,top10list,toptentitle))
 
     # ================== LAYOUT=========================

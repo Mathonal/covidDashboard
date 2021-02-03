@@ -1,0 +1,175 @@
+country,population,countryfr,continent
+Afghanistan,38,Afghanistan,Asie
+South Africa,58.6,Afrique du Sud,Afrique
+Albania,2.9,Albanie,Europe
+Algeria,43.1,Algérie,Afrique
+Germany,83.1,Allemagne,Europe
+Andorra,0.1,Andorre,Europe
+Angola,31.8,Angola,Afrique
+Antigua and Barbuda,0.1,Antigua-et-Barbuda,Amérique
+Saudi Arabia,34.3,Arabie Saoudite,Asie
+Argentina,44.9,Argentine,Amérique
+Armenia,3,Arménie,Asie
+Aruba,0.1,Aruba,Amérique
+Australia,25.4,Australie,Océanie
+Austria,8.9,Autriche,Europe
+Azerbaijan,10,Azerbaïdjan,Asie
+Bahrain,1.6,Bahreïn,Asie
+Bangladesh,163,Bangladesh,Asie
+Barbados,0.3,Barbade,Amérique
+Belgium,11.5,Belgique,Europe
+Belize,0.4,Belize,Amérique
+Benin,11.8,Bénin,Afrique
+Bermuda,0.1,Bermudes,Amérique
+Bhutan,0.8,Bhoutan,Asie
+Belarus,9.5,Biélorussie,Europe
+Myanmar,54,Birmanie,Asie
+Bolivia,11.5,Bolivie,Amérique
+Bosnia and Herzegovina,3.3,Bosnie Herzégovine,Europe
+Botswana,2.3,Botswana,Afrique
+Brazil,211,Brésil,Amérique
+Brunei Darussalam,0.4,Brunei Darussalam,Asie
+Bulgaria,7,Bulgarie,Europe
+Burkina Faso,20.3,Burkina Faso,Afrique
+Burundi,11.5,Burundi,Afrique
+Cambodia,16.5,Cambodge,Asie
+Cameroon,25.9,Cameroun,Afrique
+Canada,37.6,Canada,Amérique
+Chile,19,Chili,Amérique
+China,1397.7,Chine,Asie
+Cyprus,1.2,Chypre,Europe
+Colombia,50.3,Colombie,Amérique
+Comoros,0.9,Comores,Afrique
+Costa Rica,5,Costa Rica,Amérique
+Croatia,4.1,Croatie,Europe
+Cuba,11.3,Cuba,Amérique
+Denmark,5.8,Danemark,Europe
+Djibouti,1,Djibouti,Afrique
+Dominica,0.1,Dominique,Amérique
+United Arab Emirates,9.8,Emirats Arabes Unis,Asie
+Ecuador,17.4,Equateur,Amérique
+Spain,47.1,Espagne,Europe
+Estonia,1.3,Estonie,Europe
+United States of America,328.2,Etats-unis d'Amérique,Amérique
+Ethiopia,112.1,Ethiopie,Afrique
+Russian Federation,144.4,Fédération Russe,Europe
+Fiji,0.9,Fidji,Océanie
+Finland,5.5,Finlande,Europe
+France,67.1,France,Europe
+Gabon,2.2,Gabon,Afrique
+Georgia,3.7,Géorgie,Asie
+Ghana,30.4,Ghana,Afrique
+Greece,10.7,Grèce,Europe
+Grenada,0.1,Grenade,Amérique
+Greenland,0.1,Groenland,Europe
+Guam,0.2,Guam,Océanie
+Guatemala,16.6,Guatemala,Amérique
+Guinea,12.8,Guinée,Afrique
+Equatorial Guinea,1.4,Guinée Équatoriale,Afrique
+Guinea-Bissau,1.9,Guinée-Bissau,Afrique
+Guyana,0.8,Guyane,Amérique
+Haiti,11.3,Haïti,Amérique
+Honduras,9.7,Honduras,Amérique
+Hungary,9.8,Hongrie,Europe
+Isle of Man,0.1,île de Man,Europe
+Mauritius,1.3,Ile Maurice,Afrique
+Cayman Islands,0.1,Îles Caïmans,Amérique
+Northern Mariana Islands,0.1,Îles Mariannes du Nord,Océanie
+Marshall Islands,0.1,Iles Marshall,Océanie
+India,1366.4,Inde,Asie
+Indonesia,270.6,Indonésie,Asie
+Iraq,39.3,Irak,Asie
+Ireland,4.9,Irlande,Europe
+Iceland,0.4,Islande,Europe
+Israel,9.1,Israël,Asie
+Italy,60.3,Italie,Europe
+Jamaica,2.9,Jamaïque,Amérique
+Japan,126.3,Japon,Asie
+Jordan,10.1,Jordanie,Asie
+Kazakhstan,18.5,Kazakhstan,Asie
+Kenya,52.6,Kenya,Afrique
+Kiribati,0.1,Kiribati,Océanie
+Kuwait,4.2,Koweit,Asie
+Lao PDR,7.2,Laos,Asie
+Solomon Islands,0.7,Les îles Salomon,Océanie
+Seychelles,0.1,les Seychelles,Afrique
+Lesotho,2.1,Lesotho,Afrique
+Latvia,1.9,Lettonie,Europe
+Lebanon,6.9,Liban,Asie
+Liberia,4.9,Libéria,Afrique
+Libya,6.8,Libye,Afrique
+Lithuania,2.8,Lituanie,Europe
+Luxembourg,0.6,Luxembourg,Europe
+Madagascar,27,Madagascar,Afrique
+Malaysia,31.9,Malaisie,Asie
+Malawi,18.6,Malawi,Afrique
+Maldives,0.5,Maldives,Asie
+Mali,19.7,Mali,Afrique
+Malta,0.5,Malte,Europe
+Morocco,36.5,Maroc,Afrique
+Mauritania,4.5,Mauritanie,Afrique
+Mexico,127.6,Mexique,Amérique
+Moldova,2.7,Moldavie,Europe
+Mongolia,3.2,Mongolie,Asie
+Montenegro,0.6,Monténégro,Europe
+Mozambique,30.4,Mozambique,Afrique
+Namibia,2.5,Namibie,Afrique
+Nepal,28.6,Népal,Asie
+Nicaragua,6.5,Nicaragua,Amérique
+Niger,23.3,Niger,Afrique
+Nigeria,201,Nigeria,Afrique
+Norway,5.3,Norvège,Europe
+New Caledonia,0.3,Nouvelle Calédonie,Océanie
+New Zealand,4.9,Nouvelle-Zélande,Océanie
+Oman,5,Oman,Asie
+Uganda,44.3,Ouganda,Afrique
+Uzbekistan,33.6,Ouzbékistan,Asie
+Pakistan,216.6,Pakistan,Asie
+Panama,4.2,Panama,Amérique
+Papua New Guinea,8.8,Papouasie Nouvelle Guinée,Océanie
+Paraguay,7,Paraguay,Amérique
+Netherlands,17.3,Pays-Bas,Europe
+Peru,32.5,Pérou,Amérique
+Philippines,108.1,Philippines,Asie
+Poland,38,Pologne,Europe
+French Polynesia,0.3,Polynésie française,Océanie
+Puerto Rico,3.2,Porto Rico,Amérique
+Portugal,10.3,Portugal,Europe
+Qatar,2.8,Qatar,Asie
+Central African Republic,4.7,République centrafricaine,Afrique
+Dominican Republic,10.7,République dominicaine,Amérique
+Czech Republic,10.7,République Tchèque,Europe
+Romania,19.4,Roumanie,Europe
+United Kingdom,66.8,Royaume-Uni,Europe
+Rwanda,12.6,Rwanda,Afrique
+El Salvador,6.5,Salvador,Amérique
+Samoa,0.2,Samoa,Océanie
+American Samoa,0.1,Samoa américaines,Océanie
+Sao Tome and Principe,0.2,Sao Tomé et Principe,Afrique
+Senegal,16.3,Sénégal,Afrique
+Serbia,6.9,Serbie,Europe
+Sierra Leone,7.8,Sierra Leone,Afrique
+Singapore,5.7,Singapour,Asie
+Slovenia,2.1,Slovénie,Europe
+Somalia,15.4,Somalie,Afrique
+Sudan,42.8,Soudan,Afrique
+South Sudan,11.1,Soudan du sud,Afrique
+Sri Lanka,21.8,Sri Lanka,Asie
+Sweden,10.3,Suède,Europe
+Switzerland,8.6,Suisse,Europe
+Suriname,0.6,Suriname,Amérique
+Tajikistan,9.3,Tadjikistan,Asie
+Chad,15.9,Tchad,Afrique
+Thailand,69.6,Thaïlande,Asie
+Timor-Leste,1.3,Timor oriental,Asie
+Togo,8.1,Togo,Afrique
+Tonga,0.1,Tonga,Océanie
+Trinidad and Tobago,1.4,Trinité-et-Tobago,Amérique
+Tunisia,11.7,Tunisie,Afrique
+Turkmenistan,5.9,Turkménistan,Asie
+Turkey,83.4,Turquie,Asie
+Ukraine,44.4,Ukraine,Europe
+Uruguay,3.5,Uruguay,Amérique
+Vanuatu,0.3,Vanuatu,Océanie
+Zambia,17.9,Zambie,Afrique
+Zimbabwe,14.6,Zimbabwe,Afrique

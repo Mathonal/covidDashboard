@@ -4,8 +4,8 @@ __pycache__/
 *.py[cod]
 .env
 # CSV from api and light compute
-*Table.csv
-#workdata/raw/*.csv
-#workdata/inc/*.csv
+# *Table.csv # needeed for heroku worker until proper SQL handling
+api_pipeline/workdata/raw/*.csv
+api_pipeline/workdata/inc/*.csv
 trash/
 lastupdate.txt

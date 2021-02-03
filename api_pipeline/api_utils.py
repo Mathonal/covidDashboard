@@ -1,19 +1,46 @@
 import requests
 import math
 import pandas as pd
-from datetime import datetime
+#from datetime import datetime
+import datetime
 import time
+import threading
 import os
 import logging
-
-#External param
-from api_config import (
-    WORKDATAFOLDER,RAWFOLDER,INCFOLDER,
-    COLUMNTOKEEP,COLUMNTOCOMPUTE,
-    MAFACTOR
-    )
-
 import pathlib
+# ****************************************
+# PARAMETERS FROM CONFIG FILE
+# have to verify if api_utils is imported from APP (sys.path on parent folder)
+# or if it is imported from jupiter notebook (sys.path on current folder)
+
+# HAVE to change sys.path for jupyter 
+# because python cannot import module from parent directory of main process
+
+if __name__ == 'api_utils': #main process is jupyter, for app it's : api_pipeline/api_utils
+    import sys
+    file = pathlib.Path(__file__).resolve()
+    parent, root = file.parent, file.parents[1]
+    sys.path.append(str(root))
+    # Additionally remove the current file's directory from sys.path
+    try:
+        sys.path.remove(str(parent))
+    except ValueError: # Already removed
+        pass
+
+    #need to ensure WORKDATAFOLDER is displaced to test folder with Jupyter
+    WORKDATAFOLDER = 'api_pipeline/workdata'
+else :
+    from config import WORKDATAFOLDER
+
+# REST OF PARAMETERS ARE UNCHANGED
+from config import (
+        RAWFOLDER,INCFOLDER,
+        COLUMNTOKEEP,COLUMNTOCOMPUTE,
+        MAFACTOR,
+        LASTUPDATEFILE
+        )
+from modeling import country_map
+# ****************************************
 PATH = pathlib.Path(__file__).parent
 DATA_PATH = PATH.joinpath("../",WORKDATAFOLDER).resolve()
 
@@ -28,7 +55,7 @@ def getRawDataToCSV(countryname):
             workdatafolder+'/raw_'+countryname+'_ALLTable.csv'
     """ 
     # request loop integrated in getPandaFrameForCountry function
-    # if error, it's a big one, just skip this country
+    # if error, it's a big one, skip this country
     try :
         rawdf=pd.DataFrame(getPandaFrameForCountry(countryname))
     except :
@@ -57,6 +84,7 @@ def getPandaFrameForCountry(countryname):
         429 : too many request (wait a bit)
 
         if error at response : TRIES 5 times with 4 second interruption
+        (most of errors are 429)
     """
     # API config
     url = "https://api.covid19api.com/total/country/"+countryname
@@ -86,7 +114,7 @@ def correctDateOnPandaFrame(pandasdataframe):
     """
     for i,elem in pandasdataframe.iterrows():
         splitdate = elem['Date'].split('T')
-        newdate = datetime.strptime(splitdate[0], "%Y-%m-%d").date()
+        newdate = datetime.datetime.strptime(splitdate[0], "%Y-%m-%d").date()
         pandasdataframe.at[i,'Date'] = newdate
 
 #===========================================
@@ -153,10 +181,16 @@ def loadCSVData(countryname,Datatype):
         filepath = DATA_PATH.joinpath(INCFOLDER,'incidence_'+countryname+'_Table.csv')
     try:
         paysdf = pd.read_csv(filepath)
-    except:
+    except FileNotFoundError :
         logging.debug('{} file for {} not found at : {}'
             .format(Datatype,countryname,filepath))
         raise FileNotFoundError
+    except : 
+        # DF is empty : happens with raw data file sometimes 
+        logging.debug('{} file for {} exist but is empty'
+            .format(Datatype,countryname))
+        raise BufferError
+
     return paysdf
 
 def updateIncidenceTable(countryname,testmode=False):
@@ -166,18 +200,23 @@ def updateIncidenceTable(countryname,testmode=False):
         and complete/update the Incidence table if needed
     """
     logging.info('entering updateIncidenceTable for {}'.format(countryname))
-    #loadexisting files
 
-    # this try is not suppose to fail, as function launch at the condition
-    # that an execution of getRawDataToCSV goes well
+    # LOADING RAWFILE
     try:
         rawdf = loadCSVData(countryname,'Raw')
     except FileNotFoundError:
-        getRawDataToCSV(countryname)
-        rawdf = loadCSVData(countryname,'Raw')
-        # HERE IS an EXECUTION PROBLEM if raw data fails, no backup
-        # there is a loop of requests in getrawdata function (5x) 
+        # this try is not suppose to fail, as function is called 
+        # at the condition that an execution of getRawDataToCSV goes well 
+        if not getRawDataToCSV(countryname) : # retry 
+            logging.error('Re-attempt to request data for {} failed'
+            .format(countryname))
+            raise BufferError # parent process will ignore this country
+        try : rawdf = loadCSVData(countryname,'Raw')
+        except BufferError: raise BufferError
+    except BufferError: raise BufferError 
+    # this is when rawfile and DF are empty
 
+    # LOADING INCIDENCE FILE
     try:
         incdf = loadCSVData(countryname,'Inc')
         incdfsize = incdf.shape[0]
@@ -205,7 +244,6 @@ def updateIncidenceTable(countryname,testmode=False):
         
         # testmode write file in other name to compare with old file.
         if not testmode :
-            #filepath = WORKDATAFOLDER+'/incidence_'+countryname+'_Table.csv'
             filepath = DATA_PATH.joinpath(INCFOLDER,'incidence_'+countryname+'_Table.csv')
         else :filepath = WORKDATAFOLDER+'/incidence_'+countryname+'_Tabletest.csv'
         
@@ -214,5 +252,75 @@ def updateIncidenceTable(countryname,testmode=False):
         return True       
 
     else : 
-        logging.info(', incidence update skipped for {} : no recent data detected '.format(countryname))
+        logging.info('incidence update skipped for {} : no recent data detected '.format(countryname))
         return False
+
+def update_data(countrylist):
+    """
+        Run an update data on all countries defined in modeling
+        loop supposed to be run in THREAD because 
+        can be a bit long due to requesting API site 
+    """
+    logging.info('beginning global update thread')
+    threadslist = []
+    ignorelist = []
+    for countryname in countrylist:
+        # need to call a refresh of raw data from API
+        if getRawDataToCSV(countryname) : 
+            # before verifying if differences exists between raw and incidence tables
+            try : 
+                updateIncidenceTable(countryname)
+            except BufferError :
+                logging.error('update_alldata : RAWfile for {} is \
+                empty, will be ignored'.format(countryname))
+                ignorelist.append(countryname)
+        else : 
+            logging.error('update_alldata : RAW for {} not updated \
+            (attempts failed)'.format(countryname))
+            ignorelist.append(countryname)
+
+    today_object = datetime.date.today()
+    lastdfdate = open(LASTUPDATEFILE, 'w').write(
+                today_object.strftime("%Y-%m-%d"))
+    logging.info('update done with {} exceptions : {}'
+        .format(len(ignorelist),ignorelist))
+
+# ====== PIPELINE EXEC =============
+def globaldataupdate(testmode=False):
+    """
+        determine if a global data update is launched :
+            - last update file do not exist
+            - date written in last update file is outdated
+            - if testmode is true 
+    """
+    logging.debug('Entering global update verification')
+    #datetime verification
+    today_object = datetime.date.today()
+    try:
+        lastdfdate_str = list(open(LASTUPDATEFILE, 'r'))[0]
+        lastdfdate = datetime.datetime.strptime(lastdfdate_str, '%Y-%m-%d').date()
+    except:
+        logging.warning('No last update found : will force data sync')
+        lastdfdate_str = 0
+        lastdfdate = 0
+
+    if testmode : lastdfdate = 0
+
+    #limited to one global update daily
+    if today_object != lastdfdate :
+        logging.warning('Executing global data update since {}'.format(lastdfdate_str))
+        threading.Thread(target=update_data,args=(country_map.keys()), daemon=True).start()
+
+    else : 
+        logging.info('global data already up to date : {}'.format(lastdfdate_str))
+        #verifying is RAWDATA file exist for each country
+        missinglist = []
+        for country in country_map.keys():
+            try: rawdf = loadCSVData(countryname,'Raw')
+            except FileNotFoundError : missinglist.append(countryname)
+            except : pass #do nothing, this country is bugged
+        print(missinglist)
+        if len(missinglist)>0:
+            logging.warning('Executing reduced data update for \
+                missing country : {}'.format(missinglist))
+            threading.Thread(target=update_data,args=(missinglist), daemon=True).start()

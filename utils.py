@@ -1,7 +1,6 @@
 import pandas as pd
 import numpy as np
 import datetime
-import threading
 import logging
 
 import dash_html_components as html
@@ -11,10 +10,9 @@ import dash_core_components as dcc
 import plotly.graph_objs as go
 
 from api_pipeline.api_utils import updateIncidenceTable,getRawDataToCSV,loadCSVData
-from modeling import country_map
 
 #External param
-from api_config import (
+from config import (
     LASTUPDATEFILE,
     WORKDATAFOLDER
     )
@@ -23,6 +21,9 @@ from api_config import (
 import pathlib
 PATH = pathlib.Path(__file__)
 DATA_PATH = PATH.joinpath("../workdata").resolve()
+
+DFPOP = pd.read_csv(DATA_PATH.joinpath(
+    "country_concat_inner_translate_continent.csv"),index_col=0)
 
 # ====== DISPLAY FUNCTIONS ========
 
@@ -85,8 +86,8 @@ def refreshdatesliderange(df):
 # ====== COMPUTE FUNCTIONS ==========
 
 def get_affecteddeaths_carddata(figlist):
-    #dfpop = pd.read_csv(DATA_PATH.joinpath("population_2019.csv"),index_col=0)
-    dfpop = pd.read_csv("workdata/population_2019.csv",index_col=0)
+    #DFPOP = pd.read_csv(DATA_PATH.joinpath("population_2019.csv"),index_col=0)
+    #DFPOP = pd.read_csv("workdata/country_concat_inner_translate_continent.csv",index_col=0)
     affectedvalue = 0
     lastaffected = 0
     deathvalue = 0
@@ -105,7 +106,7 @@ def get_affecteddeaths_carddata(figlist):
         lastaffected += df['Confirmed_brutincidence'][lastline]
         deathvalue += df['Deaths'][lastline]
         lastdeath += df['Deaths_brutincidence'][lastline]
-        totalpop += float(dfpop['population'][name])  # population noted in millions
+        totalpop += float(DFPOP['population'][name])  # population noted in millions
 
     #return affectedvalue,lastaffected,deathvalue,lastdeath,totalpop
 
@@ -145,7 +146,7 @@ def get_affecteddeaths_carddata(figlist):
     return cards
 
 def graphcountryperf(countrylist):
-    dfpop = pd.read_csv("workdata/population_2019.csv",index_col=0)
+    #DFPOP = pd.read_csv("workdata/population_2019.csv",index_col=0)
     perflist = []
     indexlist = []
 
@@ -158,7 +159,7 @@ def graphcountryperf(countrylist):
         indexlist.append(name)
         perflist.append([df['Confirmed'][lastline],
             df['Deaths'][lastline],
-            float(dfpop['population'][name])])
+            float(DFPOP['population'][name])])
 
     perfdf = pd.DataFrame(data=perflist,columns=['Confirmed','Deaths','population']
         ,index=indexlist)
@@ -216,7 +217,7 @@ def graphcountryperf(countrylist):
 
 def getIncPerMillion(countrynamelist,dataScope='date'):
     # loading needeed data 
-    dfpop = pd.read_csv(DATA_PATH.joinpath("population_2019.csv"),index_col=0)
+    #DFPOP = pd.read_csv(DATA_PATH.joinpath("population_2019.csv"),index_col=0)
 
     listoflist = []
     seriesdict = {}
@@ -240,10 +241,10 @@ def getIncPerMillion(countrynamelist,dataScope='date'):
             testserie = seriesdict[name]#.loc[(seriesdict[name]>100)].reset_index(drop=True)
         else : testserie = seriesdict[name].loc[(seriesdict[name]>100)].reset_index(drop=True)
 
-        testserie = testserie/(float(dfpop['population'][name]))
+        testserie = testserie/(float(DFPOP['population'][name]))
         
         #starting with inc per million > 10
-        #testserie = seriesdict[name]/(float(dfpop['population'][name]))
+        #testserie = seriesdict[name]/(float(DFPOP['population'][name]))
         #testserie = testserie.loc[(testserie>10)].reset_index(drop=True)
         #testserie = testserie    
         if dataScope == 'date' : 
@@ -259,16 +260,7 @@ def getIncPerMillion(countrynamelist,dataScope='date'):
     return comparativeinc,updatedcountrylist
 
 def comparativeIncidenceFigure(wdf_filt,countrylist,title):
-    # Loading default Dataframe and compute data
-    #figlist = getFinalCountryList(countrylist)
-    #wdf,figlist = getIncPerMillion(list(country_map.keys()),'date')
-    #wdf,figlist = getIncPerMillion(figlist,'date')
-
-    # 4 - Filter dosplay based on chosen values
-    # DATE RANGE
-    #wdf_filt = wdf.iloc[abscisserange[0]:abscisserange[1]]
-    # 5 - draw graphe
-    # comparative incidence graphe
+    # draw graphe comparative incidence graphe
     figureToPrint = go.Figure(
         data=[
             go.Scatter(x=wdf_filt.index,y=wdf_filt[countryname],
@@ -296,77 +288,3 @@ def comparativeIncidenceFigure(wdf_filt,countrylist,title):
     )
     return figureToPrint 
 
-# ====== PIPELINE EXEC =============
-def globaldataupdate(testmode=False):
-    """
-        determine if a global data update is launched :
-            - last update file do not exist
-            - date written in last update file is outdated
-            - if testmode is true 
-    """
-    logging.debug('Entering global update verification')
-    #datetime verification
-    today_object = datetime.date.today()
-    try:
-        lastdfdate_str = list(open(LASTUPDATEFILE, 'r'))[0]
-        lastdfdate = datetime.datetime.strptime(lastdfdate_str, '%Y-%m-%d').date()
-    except:
-        logging.warning('No last update found : will force data sync')
-        lastdfdate_str = 0
-        lastdfdate = 0
-
-    if testmode : lastdfdate = 0
-
-    #limited to one global update daily
-    if today_object != lastdfdate :
-        logging.warning('Executing global data update since {}'.format(lastdfdate_str))
-        threading.Thread(target=update_alldata).start()
-
-    else : logging.info('global data already up to date : {}'.format(lastdfdate_str))
-
-def update_alldata():
-    """
-        Run an update data on all countries defined in modeling
-        loop supposed to be run in THREAD because 
-        can be a bit long due to requesting API site 
-    """
-    logging.info('beginning global update thread')
-    threadslist = []
-    ignorelist = []
-    for countryname in country_map.keys():
-        # need to call a refresh of raw data from API
-        if getRawDataToCSV(countryname) : 
-            # before verifying if differences exists between raw and incidence tables
-            updateIncidenceTable(countryname)
-        else : 
-            logging.error('update_alldata : RAW for {} not updated'
-            .format(countryname))
-            ignorelist.append(countryname)
-
-    today_object = datetime.date.today()
-    lastdfdate = open(LASTUPDATEFILE, 'w').write(
-                today_object.strftime("%Y-%m-%d"))
-    logging.info('global update done with {} exceptions : {}'
-        .format(len(ignorelist),ignorelist))
-
-def verify_priordata(paysname): # NOT USED ANYMORE
-    """
-        Function supposed to certify that 
-        the incidence file exists for input country
-        (function called during callbacks or app init)
-    """
-        # THIS PART IS ALREADY DONE IN updateIncidenceTable
-        # force call to api if Raw data not found
-        #try:
-        #    rawdf = loadCSVData(paysname,'Raw')
-        #except FileNotFoundError:
-        #    getRawDataToCSV(paysname)
-
-    # read or create incidence file from raw file
-    # ONLY UPDATE IF incidence file not found, not if incidence file outdated
-    try:
-        incdf = loadCSVData(paysname,'Inc')
-    except FileNotFoundError:
-        updateIncidenceTable(paysname)
-        incdf = loadCSVData(paysname,'Inc')
-    return incdf

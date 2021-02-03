@@ -18,7 +18,7 @@ from utils import (
     getIncPerMillion,
     comparativeIncidenceFigure,
     )
-from modeling import col_map,country_map,continent_map
+from modeling import col_map,country_map,continent_map,continentslist
 
 # get relative data folder
 import pathlib
@@ -107,12 +107,12 @@ def appcontent(app):
 def update_groupselect(grouptype):
     print(grouptype)
     if grouptype == "Continent":
-        checkoptions=[
-        {"label": 'Europe', "value": 'Europe'},
-        {"label": 'Amerique', "value": 'America'},
-        {"label": 'Asie', "value": 'Asia'},
-        {"label": 'Afrique', "value": 'Africa'},
-        ]
+        checkoptions=[{"label": k, "value": k} for k in continentslist]
+        # {"label": 'Europe', "value": 'Europe'},
+        # {"label": 'Amerique', "value": 'America'},
+        # {"label": 'Asie', "value": 'Asia'},
+        # {"label": 'Afrique', "value": 'Africa'},
+        #]
         checkvalue = ['Europe']
 
     elif grouptype == "World": 
