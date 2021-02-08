@@ -309,8 +309,7 @@ def globaldataupdate(testmode=False):
     #limited to one global update daily
     if today_object != lastdfdate :
         logging.warning('Executing global data update since {}'.format(lastdfdate_str))
-        threading.Thread(target=update_data,args=(country_map.keys()), daemon=True).start()
-
+        threading.Thread(target=update_data,args=(country_map.keys(),), daemon=True).start()
     else : 
         logging.info('global data already up to date : {}'.format(lastdfdate_str))
         #verifying is RAWDATA file exist for each country
