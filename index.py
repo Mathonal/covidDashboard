@@ -2,6 +2,7 @@ import dash
 import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input, Output
+import os
 
 from app import app
 from pages import (
@@ -22,7 +23,15 @@ logging.debug('Start of program')
 # Pre-Update Data at launch (thread)
 # verify data for country list before lauching or restarting app 
 # (after sleep on keroku)
-globaldataupdate()
+
+# ENVIRONMENT CHECK
+herokuflag = os.getenv('ISHEROKU', 'dontexist') 
+# normally give 'True', or 'dontexist' if not found
+logging.debug('Heroku EnvVariable value: {}'.format(herokuflag))
+
+# not authorizing heroku update, to long on display. only refresh data on local for now
+# see if better results once on SQL base.
+if herokuflag != 'True' : globaldataupdate()
 
 # =========================================
 # Describe the GENERIC layout/ UI of the app

@@ -1,3 +1,4 @@
+"""Application entry point."""
 from index import app
 
 application=app.server
