@@ -32,6 +32,7 @@ logging.debug('Heroku EnvVariable value: {}'.format(herokuflag))
 # not authorizing heroku update, to long on display. only refresh data on local for now
 # see if better results once on SQL base.
 if herokuflag != 'True' : globaldataupdate()
+else : logging.debug('No data update on heroku for display availability')
 
 # =========================================
 # Describe the GENERIC layout/ UI of the app
