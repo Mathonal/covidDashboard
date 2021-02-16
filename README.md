@@ -20,7 +20,8 @@ This project will be describe by these 3 axis, as it is, when treating data, how
 
 * transfert data on external SQL db
 * rework display on groupview like : button select/deselect all for starter
-* adding other visualizations on overview 
+* adding other visualizations on overview
+* completing README details
 
 ### summary
 * Project architecture

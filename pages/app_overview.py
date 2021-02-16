@@ -51,34 +51,9 @@ def appcontent(app):
         list(country_map.keys()))
 
     # ================== PERF LAYOUT =========================
-
     Worldperfo = graphcountryperf(list(country_map.keys()))
 
-    # ================== TOP incidence LAYOUT =========================
-    # Get list countries with of top incidence
-    # getting last value for each country
-    # accounting for the fact that, possibly, not all country
-    # are updated to same date
-    # lastvallist = []
-    # # LOOP getting the last number of column 
-    # # (if not updated yet, last values are NaN)
-    # for i,elem in enumerate(wdf.columns):
-    #     inc = 1
-    #     # parses lasts values until find number or arrive at the end of columns
-    #     while np.isnan(wdf.iloc[-inc,i]) and inc<wdf.shape[0]:
-    #         inc +=1
-    #     lastvallist.append(wdf.iloc[-inc,i])
-
-    # #lastvaldf = wdf.iloc[[-1]].T # this works only if all countries are up to date
-    # lastvaldf = pd.DataFrame(lastvallist,index=wdf.columns)
-    # # sort values to get highest
-    # lastvaldf.sort_values(lastvaldf.columns[0],inplace=True,ascending=False)
-    # # get first names
-    # top10list = list(lastvaldf.index[0:10])
-    # # draw graph
-    # toptentitle="Graphe des plus fortes incidences actuelles (par million de personnes)"
-    # toptengraph = dcc.Graph(figure=comparativeIncidenceFigure(wdf,top10list,toptentitle))
-
+    # ================== TOP incidence LAYOUT =================
     toptengraph = dcc.Graph(id="graph-topten")
 
     # ================== LAYOUT=========================
