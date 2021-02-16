@@ -29,6 +29,7 @@ DATA_PATH = PATH.joinpath("../workdata").resolve()
 
 def appcontent(app):
     wdf,clist = getIncPerMillion(list(country_map.keys()),'date')
+
     # ================== LAYOUT=========================
     groupDist = ['Continent','World']#,'Country']
 
@@ -74,9 +75,9 @@ def appcontent(app):
         ],
     ]
 
-    # LAYOUT STACKING
+    # ================== LAYOUT STACKING =========================
     #app.layout = dbc.Container(
-    page1_layout = html.Div(dbc.Container(
+    page_layout = html.Div(dbc.Container(
         [
             Header(app),
             html.Hr(), # Separation line
@@ -95,7 +96,7 @@ def appcontent(app):
         ],
         fluid=False,
     ))
-    return page1_layout
+    return page_layout
 
 # SELECTORS
 @app.callback(

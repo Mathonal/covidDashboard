@@ -8,8 +8,12 @@ from app import app
 from pages import (
     app_countrydetails,
     app_groupview,
-    app_scorecard,
+    app_overview,
 )
+
+# load .env in local, get from env in cloud
+from dotenv import load_dotenv
+load_dotenv()
 
 from api_pipeline.api_utils import globaldataupdate
 
@@ -17,7 +21,6 @@ import logging
 logging.basicConfig(level=logging.DEBUG,
  format=' %(threadName)s -- %(levelname)s -- %(message)s')
 # %(processName)s %(asctime)s
-
 
 logging.debug('Start of program')
 # Pre-Update Data at launch (thread)
@@ -46,7 +49,7 @@ def display_page(pathname):
     if pathname == "/details-per-country":
         return app_countrydetails.appcontent(app) 
     elif pathname == "/overview" or pathname == "/": 
-        return app_scorecard.appcontent(app)
+        return app_overview.appcontent(app)
     elif pathname == "/groupview" : 
         return app_groupview.appcontent(app)
     else : return 'ERROR 404'

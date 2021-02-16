@@ -1,44 +1,52 @@
+# usefull libs
 import pandas as pd
 import numpy as np
 import datetime
 import logging
-
+# DASH TOOLS
 import dash_html_components as html
 import dash_bootstrap_components as dbc
 import dash_core_components as dcc
-
 import plotly.graph_objs as go
-
-from api_pipeline.api_utils import updateIncidenceTable,getRawDataToCSV,loadCSVData
-
+# MY TOOLS
+from api_pipeline.api_utils import loadCSVData
 #External param
 from config import (
     LASTUPDATEFILE,
     WORKDATAFOLDER
     )
-
 # get relative data folder
 import pathlib
 PATH = pathlib.Path(__file__)
 DATA_PATH = PATH.joinpath("../workdata").resolve()
 
+# LOAD POPULATION DATA (will not change > loaded as global)
 DFPOP = pd.read_csv(DATA_PATH.joinpath(
     "country_concat_inner_translate_continent.csv"),index_col=0)
 
 # ====== DISPLAY FUNCTIONS ========
 
 def Header(app):
+    """ 
+        Assembling function of header and menu.
+        clearer when called in layouts
+    """
     return html.Div([get_header(app), html.Br([]), get_menu()])
 
 def get_header(app):
+    """ 
+        construct simple head : title, author, dashlogo
+        easy to modify
+    """
     title = html.H2("Dashboard suivi Covid19", style={"margin-top": 5})
-    subtitle = html.H5("par Mathonal", style={"margin-top": 5})
-    logo = html.Img(
+    author = html.H5("par Mathonal", style={"margin-top": 5})
+    dashlogo = html.Img(
         src=app.get_asset_url("dash-logo.png"), style={"float": "right", "height": 50}
     )
-    return dbc.Row([dbc.Col(title, md=6),dbc.Col(subtitle, md=3), dbc.Col(logo, md=3)])
+    return dbc.Row([dbc.Col(title, md=6),dbc.Col(author, md=3), dbc.Col(dashlogo, md=3)])
 
 def get_menu():
+    """ Construct a link menu in form of 1 row with a group of cards """
     PagesList = [
             dbc.Card(dbc.CardLink(
                 "Vue Globale",
@@ -55,11 +63,6 @@ def get_menu():
                 href="/details-per-country",
                 className="tab",
             )),
-            # dbc.Card(dbc.CardLink(
-            #     "Portfolio & Management",
-            #     href="/dash-financial-report/portfolio-management",
-            #     className="tab",
-            # )),
         ]
 
     # 1 row with Xcard in column
@@ -86,8 +89,7 @@ def refreshdatesliderange(df):
 # ====== COMPUTE FUNCTIONS ==========
 
 def get_affecteddeaths_carddata(figlist):
-    #DFPOP = pd.read_csv(DATA_PATH.joinpath("population_2019.csv"),index_col=0)
-    #DFPOP = pd.read_csv("workdata/country_concat_inner_translate_continent.csv",index_col=0)
+    # POPULATION DF loaded after imports
     affectedvalue = 0
     lastaffected = 0
     deathvalue = 0
@@ -216,46 +218,58 @@ def graphcountryperf(countrylist):
     return dcc.Graph(figure=graphperf)
 
 def getIncPerMillion(countrynamelist,dataScope='date'):
-    # loading needeed data 
-    #DFPOP = pd.read_csv(DATA_PATH.joinpath("population_2019.csv"),index_col=0)
-
+    """
+        build a data frame with incidence data from all country available
+        - one column per country
+        - incidence is rescale with country population for comparative purpose
+        - INDEX base depends on dataScopeValue 
+            - if STRING 'date' : keeps date referenciel
+            - if integer : Nb of days since country passed Incidence threshold 
+            value of X per millions
+    """
+    # POPULATION DATA is a global Dataframe  
     listoflist = []
     seriesdict = {}
     updatedcountrylist = countrynamelist.copy()
 
     for name in countrynamelist :
-        # load country data
-        # updateIncidenceTable(name) cutting update for faster display 
+        # load country INC data as it is
+        # not updateIncidenceTable(name) update for faster display 
         try :
             allframe = loadCSVData(name,'Inc')
-        except:
+        except: # ANY EXCEPT in laoding will result to skip the country
             logging.error('cannot open inc for {} : country ignored'.format(name))
             updatedcountrylist.remove(name)
             continue
-        # need to add a error treatment if file not found
+        
         seriesdict[name] = allframe['Confirmed_eMMincidence']
-        
-        # transformation
-        #starting with absolute value of inc
-        if dataScope == 'date' :
-            testserie = seriesdict[name]#.loc[(seriesdict[name]>100)].reset_index(drop=True)
-        else : testserie = seriesdict[name].loc[(seriesdict[name]>100)].reset_index(drop=True)
 
-        testserie = testserie/(float(DFPOP['population'][name]))
-        
-        #starting with inc per million > 10
-        #testserie = seriesdict[name]/(float(DFPOP['population'][name]))
-        #testserie = testserie.loc[(testserie>10)].reset_index(drop=True)
-        #testserie = testserie    
-        if dataScope == 'date' : 
+        # Transformation
+        # 1 - rescale incidence to country population
+        testserie = seriesdict[name]/(float(DFPOP['population'][name]))
+        # 2 - filter if treshold, and build Dataframe
+        if type(dataScope) is int :
+            # number is absolute treshold value of INCIDENCE /per million
+            tresholdindex = testserie.loc[(
+                testserie>dataScope)].index
+
+            try : # if index is empty, no data, end this loop here
+                testserie = testserie.loc[tresholdindex[0]:].reset_index(drop=True)
+            except : continue
+
+            testdf = pd.DataFrame(testserie.tolist(),columns=[name])
+        else : 
+            # keep dates as index, same temporality for every one
             testdf = pd.DataFrame(testserie.tolist(),columns=[name],
-                index=[datetime.datetime.strptime(x, '%Y-%m-%d').date() for x in allframe['Date']])
-        else : testdf = pd.DataFrame(testserie.tolist(),columns=[name])
+                index=[datetime.datetime.strptime(x, '%Y-%m-%d').date() 
+                for x in allframe['Date']])
+
         listoflist.append(testdf)
     
     if listoflist == []:
         comparativeinc = None
-    else : comparativeinc= pd.concat(listoflist, axis=1)
+    else : 
+        comparativeinc= pd.concat(listoflist, axis=1).dropna(how='all')
 
     return comparativeinc,updatedcountrylist
 

@@ -20,7 +20,8 @@ PATH = pathlib.Path(__file__).parent
 DATA_PATH = PATH.joinpath("../workdata").resolve()
 
 #default loading country (first in list)
-DEFAULTCOUNTRY = list(country_map.keys())[0]
+#DEFAULTCOUNTRY = list(country_map.keys())[0]
+DEFAULTCOUNTRY = 'France'
 
 def appcontent(app):
     # Loading default Dataframe and compute data
@@ -88,9 +89,9 @@ def appcontent(app):
 
     ]
 
-    # LAYOUT STACKING
+    # ================== LAYOUT STACKING =========================
     #app.layout = dbc.Container(
-    page1_layout = html.Div(dbc.Container(
+    page_layout = html.Div(dbc.Container(
         [
             Header(app),
             html.Hr(), # Separation line
@@ -109,7 +110,7 @@ def appcontent(app):
         ],
         fluid=False,
     ))
-    return page1_layout
+    return page_layout
 
 #GRAPHS
 @app.callback(

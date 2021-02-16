@@ -1,13 +1,13 @@
 import requests
 import math
 import pandas as pd
-#from datetime import datetime
 import datetime
 import time
 import threading
 import os
 import logging
 import pathlib
+
 # ****************************************
 # PARAMETERS FROM CONFIG FILE
 # have to verify if api_utils is imported from APP (sys.path on parent folder)
@@ -16,7 +16,8 @@ import pathlib
 # HAVE to change sys.path for jupyter 
 # because python cannot import module from parent directory of main process
 
-if __name__ == 'api_utils': #main process is jupyter, for app it's : api_pipeline/api_utils
+# main process is jupyter, for app it's : api_pipeline/api_utils
+if __name__ == 'api_utils': 
     import sys
     file = pathlib.Path(__file__).resolve()
     parent, root = file.parent, file.parents[1]
@@ -31,6 +32,7 @@ if __name__ == 'api_utils': #main process is jupyter, for app it's : api_pipelin
     WORKDATAFOLDER = 'api_pipeline/workdata'
 else :
     from config import WORKDATAFOLDER
+# ****************************************
 
 # REST OF PARAMETERS ARE UNCHANGED
 from config import (
@@ -40,7 +42,7 @@ from config import (
         LASTUPDATEFILE
         )
 from modeling import country_map
-# ****************************************
+
 PATH = pathlib.Path(__file__).parent
 DATA_PATH = PATH.joinpath("../",WORKDATAFOLDER).resolve()
 
@@ -96,13 +98,14 @@ def getPandaFrameForCountry(countryname):
     while Rcode != 200 and trycount < 5:
         response = requests.request("GET", url, headers=headers, data = payload)
         Rcode = response.status_code
+
         if Rcode != 200 :
             try : message = response.json()
             except : message = ''
-            
             logging.warning('[{}] request code for {} : {}'
                .format(Rcode,countryname,message))
             time.sleep(4)  
+
         else : logging.debug('request OK for {}'.format(Rcode,countryname))
         trycount += 1
     return response.json()
@@ -173,44 +176,58 @@ def incidenceExpMovingAverage(rawData,IncColumnName,alpha=0.1):
 #===========================================
 
 def loadCSVData(countryname,Datatype):
+    """
+        specific functions to handle CSV loads in this project :
+        - try to load CSV corresponding to country and type of file
+        - return pandas data frame
+
+        raise most common errors : "No file" and "empty file"
+    """
+
     if Datatype == 'Raw':
-        #filepath = WORKDATAFOLDER+'/raw_'+countryname+'_ALLTable.csv'
         filepath = DATA_PATH.joinpath(RAWFOLDER,'raw_'+countryname+'_ALLTable.csv')
     elif Datatype == 'Inc':
-        #filepath = WORKDATAFOLDER+'/incidence_'+countryname+'_Table.csv'
         filepath = DATA_PATH.joinpath(INCFOLDER,'incidence_'+countryname+'_Table.csv')
+    
     try:
         paysdf = pd.read_csv(filepath)
     except FileNotFoundError :
+        # happens when new country in list or file deleted
         logging.debug('{} file for {} not found at : {}'
             .format(Datatype,countryname,filepath))
         raise FileNotFoundError
     except : 
-        # DF is empty : happens with raw data file sometimes 
+        # file exists but DF is empty : happens with raw data file sometimes 
         logging.debug('{} file for {} exist but is empty'
             .format(Datatype,countryname))
-        raise BufferError
+        raise BufferError #buffer seems appropriate
 
     return paysdf
 
 def updateIncidenceTable(countryname,testmode=False):
     """
-        load Raw table and incidence table, 
+        load Raw table and incidence table corresponding to ONE country, 
         verify if they have the same number of line 
-        and complete/update the Incidence table if needed
+        and complete/update the Incidence table if needed.
+
+        There is an optimization to do when computing Inc file... 
+        actual functions recompute all column from first day instead 
+        of only computing missing values
+
+        TESTMODE is meant for Jupyter use, to compare results/execs.
     """
     logging.info('entering updateIncidenceTable for {}'.format(countryname))
-
     # LOADING RAWFILE
     try:
         rawdf = loadCSVData(countryname,'Raw')
     except FileNotFoundError:
-        # this try is not suppose to fail, as function is called 
+        # this try is not suppose to fail, as this function is called 
         # at the condition that an execution of getRawDataToCSV goes well 
         if not getRawDataToCSV(countryname) : # retry 
             logging.error('Re-attempt to request data for {} failed'
             .format(countryname))
             raise BufferError # parent process will ignore this country
+
         try : rawdf = loadCSVData(countryname,'Raw')
         except BufferError: raise BufferError
     except BufferError: raise BufferError 
@@ -237,7 +254,7 @@ def updateIncidenceTable(countryname,testmode=False):
         # compute incidence types for each column 
         for colname in COLUMNTOCOMPUTE:
             brutname = colname+'_brutincidence'
-            #recompute all incidence table
+            #recompute all incidence table, can be optimized
             currentdf[brutname] = buildbrutIncidence(currentdf,colname)           
             currentdf[colname+'_MMincidence'] = incidenceMovingAverage(currentdf,brutname,MAFACTOR)
             currentdf[colname+'_eMMincidence'] = incidenceExpMovingAverage(currentdf,brutname,0.1)
@@ -245,8 +262,7 @@ def updateIncidenceTable(countryname,testmode=False):
         # testmode write file in other name to compare with old file.
         if not testmode :
             filepath = DATA_PATH.joinpath(INCFOLDER,'incidence_'+countryname+'_Table.csv')
-        else :filepath = WORKDATAFOLDER+'/incidence_'+countryname+'_Tabletest.csv'
-        
+        else : filepath = DATA_PATH.joinpath(INCFOLDER,'incidence_'+countryname+'_Tabletest.csv')
         # saving to pdf
         currentdf.to_csv(filepath,index=False)
         return True       
@@ -318,7 +334,6 @@ def globaldataupdate(testmode=False):
             try: rawdf = loadCSVData(countryname,'Raw')
             except FileNotFoundError : missinglist.append(countryname)
             except : pass #do nothing, this country is bugged
-        print(missinglist)
         if len(missinglist)>0:
             logging.warning('Executing reduced data update for \
                 missing country : {}'.format(missinglist))
